@@ -6,14 +6,12 @@ import exifread
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 #import jpeg
 
-main_folder = path.realpath(path.dirname(__file__))
-#picture_folder = path.join(main_folder, "original")
-picture_folder = ""
-preprocess_flag = "_2000."
-my_special_tag = "_lcy"
+PICTURE_FOLDER = ""
+PREPROCESS_FLAG = "_2000."
+MY_SPECIAL_TAG = "_lcy"
 
-resize_width_landscape = 1000
-resize_width_portrait = 530
+RESIZE_WIDTH_LANDSCAPE = 1000
+RESIZE_WIDTH_PORTRAIT = 500
 
 def draw_frame(ctx, x, y, width, height, color, line_width):
     offset = 2
@@ -29,7 +27,9 @@ def add_frame(input_file):
     is_landscape = (origin_width >= origin_height)
 
     # calculate resize's height
-    resize_width = resize_width_landscape
+    resize_width = RESIZE_WIDTH_LANDSCAPE
+    if is_landscape != True:
+        resize_width = RESIZE_WIDTH_PORTRAIT
     wpercent = (resize_width/float(img_resize.size[0]))
     resize_height = int((float(img_resize.size[1])*float(wpercent)))
 
@@ -38,10 +38,18 @@ def add_frame(input_file):
     frame_width += (frame_width % 2)
     frame_height = (int)(frame_width * 710.0/800.0)
     frame_height += (frame_height % 2)
+    if is_landscape != True:
+        frame_width = (int)(resize_width * 1.7)
+        frame_width += (frame_width % 2)
+        frame_height = frame_width
+
 
     # calculate picture's left/top
     left = (int)((frame_width - resize_width) / 2)
     top = (int)((frame_height - resize_height) / 3)
+    if is_landscape != True:
+        left = (int)(frame_width * 0.05) 
+        top = (int)((frame_height - resize_height) / 2)
 
     # resize picture
     img_resize = img_resize.resize((resize_width, resize_height), Image.ANTIALIAS)
@@ -63,7 +71,10 @@ def add_frame(input_file):
     text = shot_time
     if text == "":
         text = "unkown shot time"
-    draw.text((left, top + resize_height + 10), text, font=font, fill=(230, 230, 230))
+    if is_landscape == True:
+        draw.text((left, top + resize_height + 10), text, font=font, fill=(230, 230, 230))
+    else:
+        draw.text((left+resize_width + 18, top + resize_height - 18), text, font=font, fill=(230, 230, 230))
 
     # draw frame line
     draw_frame(draw, 0, 0, frame_width, frame_height, "black", 10)
@@ -73,11 +84,11 @@ def add_frame(input_file):
     output_name, output_ext_name = path.splitext(input_file)
     tag = shot_time.replace(":", "-")
     tag = tag.replace(" ", "_")
-    output_name += ("_%dx%d_%s%s" % (frame_width, frame_height, tag, my_special_tag))
+    output_name += ("_%dx%d_%s%s" % (frame_width, frame_height, tag, MY_SPECIAL_TAG))
     output_name += output_ext_name
 
     # write file
-    # img_frame.show()
+    img_frame.show()
     img_frame = img_frame.convert("RGB")
     img_frame.save(output_name)
     print(output_name)
@@ -98,8 +109,8 @@ def search_files(dirname):
             apath = os.path.join(maindir, filename)#合并成一个完整路径
             ext = os.path.splitext(apath)[1]  # 获取文件后缀 [0]获取的是除了文件名以外的内容
             if ext in filter:
-                if -1 == apath.find(my_special_tag):
-                    if preprocess_flag == "" or -1 != apath.find(preprocess_flag):
+                if -1 == apath.find(MY_SPECIAL_TAG):
+                    if PREPROCESS_FLAG == "" or -1 != apath.find(PREPROCESS_FLAG):
                         result.append(apath)
     return result
 
@@ -109,7 +120,7 @@ usage: add_frame [path_of_picture][-h][-v]
 
 arguments:
     path_of_picture	    path of JPG file
-    -i                  ignore preprocess_flag("_2000.") flag from source picture
+    -i                  ignore PREPROCESS_FLAG("_2000.") flag from source picture
     -h, --help			show this help message and exit
     -v, --version		show version information and exit
 """)
@@ -118,7 +129,7 @@ arguments:
 if __name__ == '__main__':
     if len(sys.argv) == 1:
         print("arguments error!\r\n-h shows usage.")
-        #picture_folder = "/Users/junlin/myPhoto/from_mobile/film"
+        #PICTURE_FOLDER = "/Users/junlin/myPhoto/from_mobile/film"
         sys.exit()
     for arg in sys.argv[1:]:
         if arg == '-v' or arg == "--version":
@@ -128,16 +139,16 @@ if __name__ == '__main__':
             usage()
             sys.exit()
         elif arg == '-i' or arg == '--ignore':
-            preprocess_flag = ""
-    picture_folder = sys.argv[1]
+            PREPROCESS_FLAG = ""
+    PICTURE_FOLDER = sys.argv[1]
 
 
     # search 
-    files = search_files(picture_folder)
+    files = search_files(PICTURE_FOLDER)
     if len(files) == 0:
-        print("no file found. %s" % picture_folder)
+        print("no file found. %s" % PICTURE_FOLDER)
         sys.exit()
-    print(files)
+    # print(files)
 
     # Resize the Original files.
     for each_picture in files:
