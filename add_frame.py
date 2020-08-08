@@ -12,7 +12,7 @@ PREPROCESS_FLAG = "_2000."
 MY_SPECIAL_TAG = "_lcy"
 ADDITIONAL_OUTPUT_FOLDER = "_frame"
 
-RESIZE_WIDTH_LANDSCAPE = 1000
+RESIZE_WIDTH_LANDSCAPE = 900
 RESIZE_WIDTH_PORTRAIT = 500
 
 def draw_frame(ctx, x, y, width, height, color, line_width):
@@ -36,9 +36,9 @@ def add_frame(input_file, additional_output_path):
     resize_height = int((float(img_resize.size[1])*float(wpercent)))
 
     # calculate frame size
-    frame_width = (int)(resize_width * (800.0/710.0))
+    frame_width = (int)(resize_width * 1.13)
     frame_width += (frame_width % 2)
-    frame_height = (int)(frame_width * 710.0/800.0)
+    frame_height = (int)(frame_width * 0.89)
     frame_height += (frame_height % 2)
     if is_landscape != True:
         frame_width = (int)(resize_width * 1.7)
@@ -47,8 +47,8 @@ def add_frame(input_file, additional_output_path):
 
 
     # calculate picture's left/top
-    left = (int)((frame_width - resize_width) / 2)
-    top = (int)((frame_height - resize_height) / 3)
+    left = (int)((frame_width - resize_width) / 2.0)
+    top = (int)((frame_height - resize_height) / 4.1)
     if is_landscape != True:
         left = (int)(frame_width * 0.05) 
         top = (int)((frame_height - resize_height) / 2)
@@ -79,7 +79,7 @@ def add_frame(input_file, additional_output_path):
         draw.text((left+resize_width + 18, top + resize_height - 18), text, font=font, fill=(230, 230, 230))
 
     # draw frame line
-    draw_frame(draw, 0, 0, frame_width, frame_height, "black", 10)
+    draw_frame(draw, 0, 0, frame_width, frame_height, "black", 12)
     draw_frame(draw, left, top, resize_width, resize_height, "black", 3)
 
     # claculate output file path
