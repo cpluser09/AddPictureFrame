@@ -4,11 +4,13 @@ from os import listdir, path, remove
 from os.path import isfile, join
 import exifread
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
+import shutil
 #import jpeg
 
 PICTURE_FOLDER = ""
 PREPROCESS_FLAG = "_2000."
 MY_SPECIAL_TAG = "_lcy"
+ADDITIONAL_OUTPUT_FOLDER = "_frame"
 
 RESIZE_WIDTH_LANDSCAPE = 1000
 RESIZE_WIDTH_PORTRAIT = 500
@@ -20,7 +22,7 @@ def draw_frame(ctx, x, y, width, height, color, line_width):
     ctx.line((x+width+offset, y+height, x-offset, y+height), color, line_width)
     ctx.line((x, y+height, x, y), color, line_width+1)
 
-def add_frame(input_file):
+def add_frame(input_file, additional_output_path):
     # check landscape or portrait
     img_resize = Image.open(input_file).convert("RGBA")
     origin_width, origin_height = img_resize.size
@@ -87,10 +89,13 @@ def add_frame(input_file):
     output_name += ("_%dx%d_%s%s" % (frame_width, frame_height, tag, MY_SPECIAL_TAG))
     output_name += output_ext_name
 
+    # show picture used for debug
+    # img_frame.show()
+
     # write file
-    img_frame.show()
     img_frame = img_frame.convert("RGB")
     img_frame.save(output_name)
+    shutil.copy(output_name, additional_output_path)
     print(output_name)
 
 def GetMeThePictures(mypath):
@@ -150,8 +155,15 @@ if __name__ == '__main__':
         sys.exit()
     # print(files)
 
+    # create additional output folder
+    full_additional_path = ("%s/%s" % (PICTURE_FOLDER, ADDITIONAL_OUTPUT_FOLDER))
+    is_exist = os.path.exists(full_additional_path)
+    if not is_exist:
+        os.makedirs(full_additional_path)
+
     # Resize the Original files.
     for each_picture in files:
-        add_frame(each_picture)
+        add_frame(each_picture, full_additional_path)
 
+    print ("output folder: %s" % full_additional_path)
     print ("Done.")
