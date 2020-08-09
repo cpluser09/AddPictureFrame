@@ -68,22 +68,23 @@ def add_frame(input_file, additional_output_path):
     #for tag in exif.keys():
     #    print("tag: %s, value: %s" % (tag, exif[tag]))
     shot_time = exif["EXIF DateTimeOriginal"].printable
-    text = shot_time
-    if text == "":
-        text = "unkown shot time"
+    date_time = shot_time.split(" ", 1)[0]
+    date_time = date_time.split(":")
+    date_time = ("'%s %d %d" % (date_time[0][2:4], int(date_time[1]), int(date_time[2])))
+    if date_time == "":
+        date_time = "unkown shot time"
+    draw_text = date_time
     desc = exif["Image ImageDescription"].printable
     idx = desc.find("NOMO")
     if desc != "" and  -1 != idx:
         desc = desc[(idx+5):(len(desc)-1)]
-        #desc = desc[1:4]
-        text += " "
-        text += desc
+        draw_text += (" " + desc)
     font = ImageFont.truetype('Arial.ttf', 18)
     draw = ImageDraw.Draw(img_frame)
     if is_landscape == True:
-        draw.text((left, top + resize_height + 10), text, font=font, fill=(230, 230, 230))
+        draw.text((left, top + resize_height + 10), draw_text, font=font, fill=(230, 230, 230))
     else:
-        draw.text((left+resize_width + 18, top + resize_height - 18), text, font=font, fill=(230, 230, 230))
+        draw.text((left+resize_width + 18, top + resize_height - 18), draw_text, font=font, fill=(230, 230, 230))
 
     # draw frame line
     draw_frame(draw, 0, 0, frame_width, frame_height, "black", 12)
@@ -176,7 +177,7 @@ if __name__ == '__main__':
     # Resize the Original files.
     for each_picture in files:
         add_frame(each_picture, "")
-        #break
+        break
 
     # print ("output folder: %s" % full_additional_path)
     print ("Done.")
