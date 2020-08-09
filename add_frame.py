@@ -71,10 +71,13 @@ def add_frame(input_file, additional_output_path):
     text = shot_time
     if text == "":
         text = "unkown shot time"
-    model = exif["Image ImageDescription"].printable
-    if text != "":
+    desc = exif["Image ImageDescription"].printable
+    idx = desc.find("NOMO")
+    if desc != "" and  -1 != idx:
+        desc = desc[(idx+5):(len(desc)-1)]
+        #desc = desc[1:4]
         text += " "
-        text += model
+        text += desc
     font = ImageFont.truetype('Arial.ttf', 18)
     draw = ImageDraw.Draw(img_frame)
     if is_landscape == True:
