@@ -65,20 +65,25 @@ def add_frame(input_file, additional_output_path):
     # draw text
     imgexif = open(input_file, 'rb')
     exif = exifread.process_file(imgexif)
-    #for tag in exif.keys():
-    #    print("tag: %s, value: %s" % (tag, exif[tag]))
-    shot_time = exif["EXIF DateTimeOriginal"].printable
-    date_time = shot_time.split(" ", 1)[0]
-    date_time = date_time.split(":")
-    date_time = ("'%s %d %d" % (date_time[0][2:4], int(date_time[1]), int(date_time[2])))
-    if date_time == "":
-        date_time = "unkown shot time"
+    #for key in exif.keys():
+    #    print("tag: %s, value: %s" % (key, exif[key]))
+    shot_time = "unkown shot time"
+    date_time = ""
+    if "EXIF DateTimeOriginal" in exif.keys():
+        shot_time = exif["EXIF DateTimeOriginal"].printable
+        date_time = shot_time.split(" ", 1)[0]
+        date_time = date_time.split(":")
+        date_time = ("'%s %d %d" % (date_time[0][2:4], int(date_time[1]), int(date_time[2])))
     draw_text = date_time
-    desc = exif["Image ImageDescription"].printable
-    idx = desc.find("NOMO")
-    if desc != "" and  -1 != idx:
-        desc = desc[(idx+5):(len(desc)-1)]
-        draw_text += (" " + desc)
+    # for NOMO film
+    desc = ""
+    if "Image ImageDescription" in exif.keys():
+        desc = exif["Image ImageDescription"].printable
+        idx = desc.find("NOMO")
+        if desc != "" and  -1 != idx:
+            desc = desc[(idx+len("NOMO ")):(len(desc)-1)]
+            draw_text += ("    " + desc)
+    draw_text = ("%s  %dx%d" % (draw_text, resize_width, resize_height))
     font = ImageFont.truetype('Arial.ttf', 18)
     draw = ImageDraw.Draw(img_frame)
     if is_landscape == True:
@@ -107,7 +112,7 @@ def add_frame(input_file, additional_output_path):
 
     # write file
     img_frame = img_frame.convert("RGB")
-    img_frame.save(output_full_path)
+    img_frame.save(output_full_path, quality=100)
     #shutil.copy(output_name, additional_output_path)
     print(output_full_path)
 
@@ -177,7 +182,7 @@ if __name__ == '__main__':
     # Resize the Original files.
     for each_picture in files:
         add_frame(each_picture, "")
-        break
+        #break
 
     # print ("output folder: %s" % full_additional_path)
     print ("Done.")
