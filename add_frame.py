@@ -63,16 +63,20 @@ def add_frame(input_file, additional_output_path):
     img_frame.paste(img_resize, (left, top))
 
     # draw text
-    font = ImageFont.truetype('Arial.ttf', 18)
-    draw = ImageDraw.Draw(img_frame)
     imgexif = open(input_file, 'rb')
     exif = exifread.process_file(imgexif)
-    # for tag in exif.keys():
-    #     print("tag: %s, value: %s" % (tag, exif[tag]))
+    #for tag in exif.keys():
+    #    print("tag: %s, value: %s" % (tag, exif[tag]))
     shot_time = exif["EXIF DateTimeOriginal"].printable
     text = shot_time
     if text == "":
         text = "unkown shot time"
+    model = exif["Image ImageDescription"].printable
+    if text != "":
+        text += " "
+        text += model
+    font = ImageFont.truetype('Arial.ttf', 18)
+    draw = ImageDraw.Draw(img_frame)
     if is_landscape == True:
         draw.text((left, top + resize_height + 10), text, font=font, fill=(230, 230, 230))
     else:
@@ -90,7 +94,7 @@ def add_frame(input_file, additional_output_path):
     output_name += output_ext_name
 
     # show picture used for debug
-    # img_frame.show()
+    img_frame.show()
 
     # write file
     img_frame = img_frame.convert("RGB")
@@ -164,6 +168,7 @@ if __name__ == '__main__':
     # Resize the Original files.
     for each_picture in files:
         add_frame(each_picture, full_additional_path)
+        break
 
     print ("output folder: %s" % full_additional_path)
     print ("Done.")
