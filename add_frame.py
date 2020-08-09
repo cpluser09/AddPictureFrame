@@ -87,20 +87,25 @@ def add_frame(input_file, additional_output_path):
     draw_frame(draw, left, top, resize_width, resize_height, "black", 3)
 
     # claculate output file path
-    output_name, output_ext_name = path.splitext(input_file)
-    tag = shot_time.replace(":", "-")
-    tag = tag.replace(" ", "_")
-    output_name += ("_%dx%d_%s%s" % (frame_width, frame_height, tag, MY_SPECIAL_TAG))
+    riginal_path, original_file_name = path.split(input_file)
+    output_name, output_ext_name = path.splitext(original_file_name)
+    text_time = shot_time.replace(":", "-")
+    text_time = text_time.replace(" ", "_")
+    output_name += ("_%dx%d_%s%s" % (frame_width, frame_height, text_time, MY_SPECIAL_TAG))
     output_name += output_ext_name
+    output_folder = ("%s/%s" % (riginal_path, ADDITIONAL_OUTPUT_FOLDER))
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    output_full_path = ("%s/%s" % (output_folder, output_name))
 
     # show picture used for debug
-    img_frame.show()
+    #img_frame.show()
 
     # write file
     img_frame = img_frame.convert("RGB")
-    img_frame.save(output_name)
-    shutil.copy(output_name, additional_output_path)
-    print(output_name)
+    img_frame.save(output_full_path)
+    #shutil.copy(output_name, additional_output_path)
+    print(output_full_path)
 
 def GetMeThePictures(mypath):
     OriginalPictures = [f for f in listdir(mypath) if isfile(join(mypath, f))]
@@ -160,15 +165,15 @@ if __name__ == '__main__':
     # print(files)
 
     # create additional output folder
-    full_additional_path = ("%s/%s" % (PICTURE_FOLDER, ADDITIONAL_OUTPUT_FOLDER))
-    is_exist = os.path.exists(full_additional_path)
-    if not is_exist:
-        os.makedirs(full_additional_path)
+    #full_additional_path = ("%s/%s" % (PICTURE_FOLDER, ADDITIONAL_OUTPUT_FOLDER))
+    #is_exist = os.path.exists(full_additional_path)
+    #if not is_exist:
+    #    os.makedirs(full_additional_path)
 
     # Resize the Original files.
     for each_picture in files:
-        add_frame(each_picture, full_additional_path)
-        break
+        add_frame(each_picture, "")
+        #break
 
-    print ("output folder: %s" % full_additional_path)
+    # print ("output folder: %s" % full_additional_path)
     print ("Done.")
