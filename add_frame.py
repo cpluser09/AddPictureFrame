@@ -14,28 +14,34 @@ PREPROCESS_FLAG = "_2000."
 MY_SPECIAL_TAG = "_lcy"
 ADDITIONAL_OUTPUT_FOLDER = "_frame"
 
-OPTION_DEBUG = 1
+OPTION_DEBUG = 0
 OPTION_CLEAR_PICTURES = 0
 
 RESIZE_WIDTH_LANDSCAPE = 900
 RESIZE_WIDTH_PORTRAIT = 500
 
 def queryAddr(exif):
+    if "GPS GPSLongitudeRef" not in exif.keys():
+        return ""
     # 经度
     lon_ref = exif["GPS GPSLongitudeRef"].printable
     lon = exif["GPS GPSLongitude"].printable[1:-1].replace(" ", "").replace("/", ",").split(",")
+    if len(lon) < 4:
+        return ""
     lon = float(lon[0]) + float(lon[1]) / 60 + float(lon[2]) / float(lon[3]) / 3600
     if lon_ref != "E":
         lon = lon * (-1)
     # 纬度
     lat_ref = exif["GPS GPSLatitudeRef"].printable
     lat = exif["GPS GPSLatitude"].printable[1:-1].replace(" ", "").replace("/", ",").split(",")
+    if len(lat) < 4:
+        return ""
     lat = float(lat[0]) + float(lat[1]) / 60 + float(lat[2]) / float(lat[3]) / 3600
     if lat_ref != "N":
         lat = lat * (-1)
     #print('照片的经纬度：', (lat, lon))
     # 调用百度地图api转换经纬度为详细地址
-    secret_key = 'MAsVGINLNyTGiM4UulcaeluCekGnAFxj' # 百度地图api 需要注册创建应用
+    secret_key = 'xxxxxxxxxxxxxxxxx' # 百度地图api 需要注册创建应用
     baidu_map_api = 'http://api.map.baidu.com/reverse_geocoding/v3/?ak={}&output=json&coordtype=wgs84ll&location={},{}'.format(secret_key, lat, lon)
     content = requests.get(baidu_map_api).text
     gps_address = json.loads(content)
