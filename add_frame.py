@@ -127,17 +127,23 @@ def search_files(dirname):
     filter = [".jpg", ".JPG", ".jpeg", ".JPEG"]
     result = []
 
-    for maindir, subdir, file_name_list in os.walk(dirname):
-        # print("1:",maindir) #当前主目录
-        # print("2:",subdir) #当前主目录下的所有目录
-        # print("3:",file_name_list)  #当前主目录下的所有文件
-        for filename in file_name_list:
-            apath = os.path.join(maindir, filename)#合并成一个完整路径
-            ext = os.path.splitext(apath)[1]  # 获取文件后缀 [0]获取的是除了文件名以外的内容
-            if ext in filter:
-                if -1 == apath.find(MY_SPECIAL_TAG):
-                    if PREPROCESS_FLAG == "" or -1 != apath.find(PREPROCESS_FLAG):
-                        result.append(apath)
+    for filename in os.listdir(dirname):
+        apath = os.path.join(dirname, filename)
+        ext = os.path.splitext(apath)[1]
+        if ext in filter:
+            if -1 == apath.find(MY_SPECIAL_TAG):
+                if PREPROCESS_FLAG == "" or -1 != apath.find(PREPROCESS_FLAG):
+                    result.append(apath)
+
+    # serach sub-folder
+    # for maindir, subdir, file_name_list in os.walk(dirname):
+    #     for filename in file_name_list:
+    #         apath = os.path.join(maindir, filename)#合并成一个完整路径
+    #         ext = os.path.splitext(apath)[1]  # 获取文件后缀 [0]获取的是除了文件名以外的内容
+    #         if ext in filter:
+    #             if -1 == apath.find(MY_SPECIAL_TAG):
+    #                 if PREPROCESS_FLAG == "" or -1 != apath.find(PREPROCESS_FLAG):
+    #                     result.append(apath)
     return result
 
 def usage():
@@ -177,7 +183,8 @@ if __name__ == '__main__':
     if len(files) == 0:
         print("no file found. %s" % PICTURE_FOLDER)
         sys.exit()
-    # print(files)
+    print(files)
+    #sys.exit()
 
     # create additional output folder
     full_additional_path = ("%s/%s" % (PICTURE_FOLDER, ADDITIONAL_OUTPUT_FOLDER))
