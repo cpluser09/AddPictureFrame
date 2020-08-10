@@ -1,6 +1,8 @@
 import os
 import sys
 import glob
+import json
+import requests
 import exifread
 from os.path import isfile, join
 from os import listdir, path, remove
@@ -12,10 +14,51 @@ PREPROCESS_FLAG = "_2000."
 MY_SPECIAL_TAG = "_lcy"
 ADDITIONAL_OUTPUT_FOLDER = "_frame"
 
+OPTION_DEBUG = 1
 OPTION_CLEAR_PICTURES = 0
 
 RESIZE_WIDTH_LANDSCAPE = 900
 RESIZE_WIDTH_PORTRAIT = 500
+
+def queryAddr(exif):
+    # 经度
+    lon_ref = exif["GPS GPSLongitudeRef"].printable
+    lon = exif["GPS GPSLongitude"].printable[1:-1].replace(" ", "").replace("/", ",").split(",")
+    lon = float(lon[0]) + float(lon[1]) / 60 + float(lon[2]) / float(lon[3]) / 3600
+    if lon_ref != "E":
+        lon = lon * (-1)
+    # 纬度
+    lat_ref = exif["GPS GPSLatitudeRef"].printable
+    lat = exif["GPS GPSLatitude"].printable[1:-1].replace(" ", "").replace("/", ",").split(",")
+    lat = float(lat[0]) + float(lat[1]) / 60 + float(lat[2]) / float(lat[3]) / 3600
+    if lat_ref != "N":
+        lat = lat * (-1)
+    #print('照片的经纬度：', (lat, lon))
+    # 调用百度地图api转换经纬度为详细地址
+    secret_key = 'MAsVGINLNyTGiM4UulcaeluCekGnAFxj' # 百度地图api 需要注册创建应用
+    baidu_map_api = 'http://api.map.baidu.com/reverse_geocoding/v3/?ak={}&output=json&coordtype=wgs84ll&location={},{}'.format(secret_key, lat, lon)
+    content = requests.get(baidu_map_api).text
+    gps_address = json.loads(content)
+    # 结构化的地址
+    formatted_address = gps_address["result"]["formatted_address"]
+    # 国家（若需访问境外POI，需申请逆地理编码境外POI服务权限）
+    country = gps_address["result"]["addressComponent"]["country"]
+    # 省
+    province = gps_address["result"]["addressComponent"]["province"]
+    # 市
+    city = gps_address["result"]["addressComponent"]["city"]
+    # 区
+    district = gps_address["result"]["addressComponent"]["district"]
+    # 街
+    street = gps_address["result"]["addressComponent"]["street"]
+    # 语义化地址描述
+    sematic_description = gps_address["result"]["sematic_description"]
+    #print(formatted_address)
+    #print(city)
+    #print(street)
+    #print(gps_address["result"]["business"])
+    return street + " " + city.replace("市", "")
+
 
 def draw_frame(ctx, x, y, width, height, color, line_width):
     offset = 2
@@ -69,6 +112,12 @@ def add_frame(input_file, output_path):
     exif = exifread.process_file(imgexif)
     #for key in exif.keys():
     #    print("tag: %s, value: %s" % (key, exif[key]))
+
+    # GPS
+    location = queryAddr(exif)
+    print(location)
+
+    # shot time
     shot_time = "unkown shot time"
     date_time = ""
     if "EXIF DateTimeOriginal" in exif.keys():
@@ -85,7 +134,7 @@ def add_frame(input_file, output_path):
         if desc != "" and  -1 != idx:
             desc = desc[(idx+len("NOMO ")):(len(desc)-1)]
             draw_text += ("  " + desc)
-    draw_text = ("%s  %dx%d" % (draw_text, resize_width, resize_height))
+    draw_text = ("%s  %dx%d  %s" % (draw_text, resize_width, resize_height, location))
     font = ImageFont.truetype('Arial.ttf', 18)
     draw = ImageDraw.Draw(img_frame)
     if is_landscape == True:
@@ -111,7 +160,8 @@ def add_frame(input_file, output_path):
     output_full_path = ("%s/%s" % (output_folder, output_name))
 
     # show picture used for debug
-    #img_frame.show()
+    if OPTION_DEBUG == 1:
+        img_frame.show()
 
     # write file
     img_frame = img_frame.convert("RGB")
@@ -199,7 +249,8 @@ if __name__ == '__main__':
     # Resize the Original files.
     for each_picture in files:
         add_frame(each_picture, full_additional_path)
-        #break
+        if OPTION_DEBUG == 1:
+            break
 
     # print ("output folder: %s" % full_additional_path)
     print ("Done.")
