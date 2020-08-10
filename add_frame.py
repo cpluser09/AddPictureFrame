@@ -1,18 +1,18 @@
-import sys
 import os
-from os import listdir, path, remove
-from os.path import isfile, join
-import exifread
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
-#import shutil
+import sys
 import glob
-#import jpeg
+import exifread
+from os.path import isfile, join
+from os import listdir, path, remove
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
+
 
 PICTURE_FOLDER = ""
 PREPROCESS_FLAG = "_2000."
 MY_SPECIAL_TAG = "_lcy"
 ADDITIONAL_OUTPUT_FOLDER = "_frame"
-IS_CLEAR_PICTURES = 0
+
+OPTION_CLEAR_PICTURES = 0
 
 RESIZE_WIDTH_LANDSCAPE = 900
 RESIZE_WIDTH_PORTRAIT = 500
@@ -174,7 +174,7 @@ if __name__ == '__main__':
         elif arg == '-i' or arg == '--ignore':
             PREPROCESS_FLAG = ""
         elif arg == '-c' or arg == '--clear':
-            IS_CLEAR_PICTURES = 1
+            OPTION_CLEAR_PICTURES = 1
     PICTURE_FOLDER = sys.argv[1]
 
 
@@ -183,7 +183,7 @@ if __name__ == '__main__':
     if len(files) == 0:
         print("no file found. %s" % PICTURE_FOLDER)
         sys.exit()
-    print(files)
+    #print(files)
     #sys.exit()
 
     # create additional output folder
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     is_exist = os.path.exists(full_additional_path)
     if not is_exist:
         os.makedirs(full_additional_path)
-    elif IS_CLEAR_PICTURES == 1:
+    elif OPTION_CLEAR_PICTURES == 1:
         fileNames = glob.glob(full_additional_path + r'/*')
         for fileName in fileNames:
             os.remove(fileName)
