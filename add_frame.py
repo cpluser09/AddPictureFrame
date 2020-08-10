@@ -4,13 +4,15 @@ from os import listdir, path, remove
 from os.path import isfile, join
 import exifread
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
-import shutil
+#import shutil
+import glob
 #import jpeg
 
 PICTURE_FOLDER = ""
 PREPROCESS_FLAG = "_2000."
 MY_SPECIAL_TAG = "_lcy"
 ADDITIONAL_OUTPUT_FOLDER = "_frame"
+IS_CLEAR_PICTURES = 0
 
 RESIZE_WIDTH_LANDSCAPE = 900
 RESIZE_WIDTH_PORTRAIT = 500
@@ -22,7 +24,7 @@ def draw_frame(ctx, x, y, width, height, color, line_width):
     ctx.line((x+width+offset, y+height, x-offset, y+height), color, line_width)
     ctx.line((x, y+height, x, y), color, line_width+1)
 
-def add_frame(input_file, additional_output_path):
+def add_frame(input_file, output_path):
     # check landscape or portrait
     img_resize = Image.open(input_file).convert("RGBA")
     origin_width, origin_height = img_resize.size
@@ -102,7 +104,8 @@ def add_frame(input_file, additional_output_path):
     text_time = text_time.replace(" ", "_")
     output_name += ("_%dx%d_%s%s" % (frame_width, frame_height, text_time, MY_SPECIAL_TAG))
     output_name += output_ext_name
-    output_folder = ("%s/%s" % (riginal_path, ADDITIONAL_OUTPUT_FOLDER))
+    #output_folder = ("%s/%s" % (riginal_path, ADDITIONAL_OUTPUT_FOLDER))
+    output_folder = output_path
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     output_full_path = ("%s/%s" % (output_folder, output_name))
@@ -144,6 +147,7 @@ usage: add_frame [path_of_picture][-h][-v]
 arguments:
     path_of_picture	    path of JPG file
     -i                  ignore PREPROCESS_FLAG("_2000.") flag from source picture
+    -c                  clear/delete all pictures on output folder before resize
     -h, --help			show this help message and exit
     -v, --version		show version information and exit
 """)
@@ -163,6 +167,8 @@ if __name__ == '__main__':
             sys.exit()
         elif arg == '-i' or arg == '--ignore':
             PREPROCESS_FLAG = ""
+        elif arg == '-c' or arg == '--clear':
+            IS_CLEAR_PICTURES = 1
     PICTURE_FOLDER = sys.argv[1]
 
 
@@ -174,15 +180,21 @@ if __name__ == '__main__':
     # print(files)
 
     # create additional output folder
-    #full_additional_path = ("%s/%s" % (PICTURE_FOLDER, ADDITIONAL_OUTPUT_FOLDER))
-    #is_exist = os.path.exists(full_additional_path)
-    #if not is_exist:
-    #    os.makedirs(full_additional_path)
+    full_additional_path = ("%s/%s" % (PICTURE_FOLDER, ADDITIONAL_OUTPUT_FOLDER))
+    is_exist = os.path.exists(full_additional_path)
+    if not is_exist:
+        os.makedirs(full_additional_path)
+    elif IS_CLEAR_PICTURES == 1:
+        fileNames = glob.glob(full_additional_path + r'/*')
+        for fileName in fileNames:
+            os.remove(fileName)
+            print("remove file:%s" % fileNames)
+
 
     # Resize the Original files.
     for each_picture in files:
-        add_frame(each_picture, "")
-        #break
+        add_frame(each_picture, full_additional_path)
+        break
 
     # print ("output folder: %s" % full_additional_path)
     print ("Done.")
