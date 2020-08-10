@@ -84,7 +84,7 @@ def add_frame(input_file, output_path):
         idx = desc.find("NOMO")
         if desc != "" and  -1 != idx:
             desc = desc[(idx+len("NOMO ")):(len(desc)-1)]
-            draw_text += ("    " + desc)
+            draw_text += ("  " + desc)
     draw_text = ("%s  %dx%d" % (draw_text, resize_width, resize_height))
     font = ImageFont.truetype('Arial.ttf', 18)
     draw = ImageDraw.Draw(img_frame)
@@ -188,13 +188,11 @@ if __name__ == '__main__':
         fileNames = glob.glob(full_additional_path + r'/*')
         for fileName in fileNames:
             os.remove(fileName)
-            print("remove file:%s" % fileNames)
-
 
     # Resize the Original files.
     for each_picture in files:
         add_frame(each_picture, full_additional_path)
-        break
+        #break
 
     # print ("output folder: %s" % full_additional_path)
     print ("Done.")
