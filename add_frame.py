@@ -16,6 +16,7 @@ ADDITIONAL_OUTPUT_FOLDER = "_frame"
 
 OPTION_DEBUG = 0
 OPTION_CLEAR_PICTURES = 0
+OPTION_QUERY_ADDRESS = 0
 
 RESIZE_WIDTH_LANDSCAPE = 900
 RESIZE_WIDTH_PORTRAIT = 500
@@ -41,7 +42,7 @@ def queryAddr(exif):
         lat = lat * (-1)
     #print('照片的经纬度：', (lat, lon))
     # 调用百度地图api转换经纬度为详细地址
-    secret_key = 'xxxxxxxxxxxxxxxxx' # 百度地图api 需要注册创建应用
+    secret_key = 'xxxxxxxx' # 百度地图api 填入你自己的key
     baidu_map_api = 'http://api.map.baidu.com/reverse_geocoding/v3/?ak={}&output=json&coordtype=wgs84ll&location={},{}'.format(secret_key, lat, lon)
     content = requests.get(baidu_map_api).text
     gps_address = json.loads(content)
@@ -120,8 +121,10 @@ def add_frame(input_file, output_path):
     #    print("tag: %s, value: %s" % (key, exif[key]))
 
     # GPS
-    location = queryAddr(exif)
-    print(location)
+    location = ""
+    if OPTION_QUERY_ADDRESS == 1:
+        location = queryAddr(exif)
+        print(location)
 
     # shot time
     shot_time = "unkown shot time"
@@ -141,7 +144,7 @@ def add_frame(input_file, output_path):
             desc = desc[(idx+len("NOMO ")):(len(desc)-1)]
             draw_text += ("  " + desc)
     draw_text = ("%s  %dx%d  %s" % (draw_text, resize_width, resize_height, location))
-    font = ImageFont.truetype('Arial.ttf', 18)
+    font = ImageFont.truetype("msyh.ttf", 18)
     draw = ImageDraw.Draw(img_frame)
     if is_landscape == True:
         draw.text((left, top + resize_height + 10), draw_text, font=font, fill=(230, 230, 230))
@@ -210,6 +213,8 @@ arguments:
     path_of_picture	    path of JPG file
     -i                  ignore PREPROCESS_FLAG("_2000.") flag from source picture
     -c                  clear/delete all pictures on output folder before resize
+    -a                  parse shot address from GPS info
+    -d                  enable debug mode
     -h, --help			show this help message and exit
     -v, --version		show version information and exit
 """)
@@ -231,6 +236,10 @@ if __name__ == '__main__':
             PREPROCESS_FLAG = ""
         elif arg == '-c' or arg == '--clear':
             OPTION_CLEAR_PICTURES = 1
+        elif arg == '-a' or arg == '--address':
+            OPTION_QUERY_ADDRESS = 1
+        elif arg == '-d' or arg == '--debug':
+            OPTION_DEBUG = 1
     PICTURE_FOLDER = sys.argv[1]
 
 
