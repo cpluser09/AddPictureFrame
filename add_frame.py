@@ -20,6 +20,7 @@ OPTION_QUERY_ADDRESS = 0
 
 RESIZE_WIDTH_LANDSCAPE = 900
 RESIZE_WIDTH_PORTRAIT = 500
+TEXT_FONT_SIZE = 14
 
 def queryAddr(exif):
     if "GPS GPSLongitudeRef" not in exif.keys():
@@ -42,7 +43,7 @@ def queryAddr(exif):
         lat = lat * (-1)
     #print('照片的经纬度：', (lat, lon))
     # 调用百度地图api转换经纬度为详细地址
-    secret_key = 'xxxxxxxx' # 百度地图api 填入你自己的key
+    secret_key = '1flkRi6QA71FrifGk4yFEB6jGtWOpFxC' # 百度地图api 填入你自己的key
     baidu_map_api = 'http://api.map.baidu.com/reverse_geocoding/v3/?ak={}&output=json&coordtype=wgs84ll&location={},{}'.format(secret_key, lat, lon)
     content = requests.get(baidu_map_api).text
     gps_address = json.loads(content)
@@ -64,6 +65,9 @@ def queryAddr(exif):
     #print(city)
     #print(street)
     #print(gps_address["result"]["business"])
+    idx = street.find("路")
+    if idx != -1:
+        street = street[0:idx+1]
     return street + " " + city.replace("市", "")
 
 
@@ -97,13 +101,20 @@ def add_frame(input_file, output_path):
         frame_width += (frame_width % 2)
         frame_height = frame_width
 
-
     # calculate picture's left/top
     left = (int)((frame_width - resize_width) / 2.0)
     top = (int)((frame_height - resize_height) / 4.1)
     if is_landscape != True:
         left = (int)(frame_width * 0.05) 
         top = (int)((frame_height - resize_height) / 2)
+
+    # font size
+    if is_landscape == True:
+        if resize_width > 1200:
+            TEXT_FONT_SIZE = 18
+    else:
+        if resize_height > 800:
+            TEXT_FONT_SIZE = 18
 
     # resize picture
     img_resize = img_resize.resize((resize_width, resize_height), Image.ANTIALIAS)
@@ -144,7 +155,7 @@ def add_frame(input_file, output_path):
             desc = desc[(idx+len("NOMO ")):(len(desc)-1)]
             draw_text += ("  " + desc)
     draw_text = ("%s  %dx%d  %s" % (draw_text, resize_width, resize_height, location))
-    font = ImageFont.truetype("msyh.ttf", 18)
+    font = ImageFont.truetype("msyh.ttf", 14)
     draw = ImageDraw.Draw(img_frame)
     if is_landscape == True:
         draw.text((left, top + resize_height + 10), draw_text, font=font, fill=(230, 230, 230))
