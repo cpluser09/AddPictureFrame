@@ -145,7 +145,6 @@ def add_frame(input_file, output_path):
         date_time = shot_time.split(" ", 1)[0]
         date_time = date_time.split(":")
         date_time = ("'%s %d %d" % (date_time[0][2:4], int(date_time[1]), int(date_time[2])))
-    draw_text = date_time
     # for NOMO film
     desc = ""
     if "Image ImageDescription" in exif.keys():
@@ -153,8 +152,7 @@ def add_frame(input_file, output_path):
         idx = desc.find("NOMO")
         if desc != "" and  -1 != idx:
             desc = desc[(idx+len("NOMO ")):(len(desc)-1)]
-            draw_text += ("  " + desc)
-    draw_text = ("%s  %dx%d  %s" % (draw_text, resize_width, resize_height, location))
+    draw_text = ("%s  %dx%d  %s  %s" % (date_time, resize_width, resize_height, desc, location))
     font = ImageFont.truetype("msyh.ttf", 14)
     draw = ImageDraw.Draw(img_frame)
     if is_landscape == True:
@@ -166,12 +164,12 @@ def add_frame(input_file, output_path):
     draw_frame(draw, 0, 0, frame_width, frame_height, "black", 12)
     draw_frame(draw, left, top, resize_width, resize_height, "black", 3)
 
-    # claculate output file path
+    # calculate output file path
     riginal_path, original_file_name = path.split(input_file)
     output_name, output_ext_name = path.splitext(original_file_name)
     text_time = shot_time.replace(":", "-")
     text_time = text_time.replace(" ", "_")
-    output_name += ("_%dx%d_%s%s" % (frame_width, frame_height, text_time, MY_SPECIAL_TAG))
+    output_name += ("_%s_%dx%d%s" % (text_time, frame_width, frame_height, MY_SPECIAL_TAG))
     output_name += output_ext_name
     #output_folder = ("%s/%s" % (riginal_path, ADDITIONAL_OUTPUT_FOLDER))
     output_folder = output_path
