@@ -16,7 +16,7 @@ ADDITIONAL_OUTPUT_FOLDER = "_frame"
 
 OPTION_DEBUG = 0
 OPTION_CLEAR_PICTURES = 0
-OPTION_QUERY_ADDRESS = 0
+OPTION_QUERY_ADDRESS = 1
 
 RESIZE_WIDTH_LANDSCAPE = 770
 RESIZE_WIDTH_PORTRAIT = 400
@@ -225,7 +225,7 @@ arguments:
     path_of_picture	    path of JPG file
     -i                  ignore PREPROCESS_FLAG("_2000.") flag from source picture
     -c                  clear/delete all pictures on output folder before resize
-    -a                  parse shot address from GPS info
+    -a                  disable parse shot address from GPS info
     -d                  enable debug mode
     -h, --help			show this help message and exit
     -v, --version		show version information and exit
@@ -249,7 +249,7 @@ if __name__ == '__main__':
         elif arg == '-c' or arg == '--clear':
             OPTION_CLEAR_PICTURES = 1
         elif arg == '-a' or arg == '--address':
-            OPTION_QUERY_ADDRESS = 1
+            OPTION_QUERY_ADDRESS = 0
         elif arg == '-d' or arg == '--debug':
             OPTION_DEBUG = 1
     PICTURE_FOLDER = sys.argv[1]
