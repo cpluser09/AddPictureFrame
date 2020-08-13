@@ -152,13 +152,16 @@ def add_frame(input_file, output_path):
         idx = desc.find("NOMO")
         if desc != "" and  -1 != idx:
             desc = desc[(idx+len("NOMO ")):(len(desc)-1)]
-    draw_text = ("%s  %dx%d  %s  %s" % (date_time, resize_width, resize_height, desc, location))
     font = ImageFont.truetype("msyh.ttf", 14)
     draw = ImageDraw.Draw(img_frame)
     if is_landscape == True:
+        draw_text = ("%s  %dx%d  %s  %s" % (date_time, resize_width, resize_height, desc, location))
         draw.text((left, top + resize_height + 10), draw_text, font=font, fill=(230, 230, 230))
     else:
-        draw.text((left+resize_width + 18, top + resize_height - 18), draw_text, font=font, fill=(230, 230, 230))
+        draw_text = ("%s  %dx%d  %s" % (date_time, resize_width, resize_height, desc))
+        draw.text((left+resize_width + 12, top + resize_height - 16), draw_text, font=font, fill=(230, 230, 230))
+        if location != "":
+            draw.text((left+resize_width + 12, top + resize_height - 38), location, font=font, fill=(230, 230, 230))
 
     # draw frame line
     draw_frame(draw, 0, 0, frame_width, frame_height, "black", 12)
