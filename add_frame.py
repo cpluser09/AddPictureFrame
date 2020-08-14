@@ -205,6 +205,7 @@ def search_files(dirname):
             if -1 == apath.find(MY_SPECIAL_TAG):
                 if PREPROCESS_FLAG == "" or -1 != apath.find(PREPROCESS_FLAG):
                     result.append(apath)
+    result = sorted(result)
 
     # serach sub-folder
     # for maindir, subdir, file_name_list in os.walk(dirname):
