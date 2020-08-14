@@ -132,7 +132,7 @@ def add_frame(input_file, output_path):
     #    print("tag: %s, value: %s" % (key, exif[key]))
 
     # GPS
-    location = ""
+    location = "TTTTTTT"
     if OPTION_QUERY_ADDRESS == 1:
         location = queryAddr(exif)
         print(location)
@@ -231,30 +231,7 @@ arguments:
     -v, --version		show version information and exit
 """)
 
-
-if __name__ == '__main__':
-    if len(sys.argv) == 1:
-        print("arguments error!\r\n-h shows usage.")
-        #PICTURE_FOLDER = "/Users/junlin/myPhoto/from_mobile/film"
-        sys.exit()
-    for arg in sys.argv[1:]:
-        if arg == '-v' or arg == "--version":
-            print("1.0.0")
-            sys.exit()
-        elif arg == '-h' or arg == '--help':
-            usage()
-            sys.exit()
-        elif arg == '-i' or arg == '--ignore':
-            PREPROCESS_FLAG = ""
-        elif arg == '-c' or arg == '--clear':
-            OPTION_CLEAR_PICTURES = 1
-        elif arg == '-a' or arg == '--address':
-            OPTION_QUERY_ADDRESS = 0
-        elif arg == '-d' or arg == '--debug':
-            OPTION_DEBUG = 1
-    PICTURE_FOLDER = sys.argv[1]
-
-
+def process():
     # search 
     files = search_files(PICTURE_FOLDER)
     if len(files) == 0:
@@ -281,3 +258,32 @@ if __name__ == '__main__':
 
     # print ("output folder: %s" % full_additional_path)
     print ("Done.")
+
+
+if __name__ == '__main__':
+    if len(sys.argv) == 1:
+        print("arguments error!\r\n-h shows usage.")
+        # PICTURE_FOLDER = "/Users/junlin/test/gps"
+        # PREPROCESS_FLAG = ""
+        # process()
+        sys.exit()
+    for arg in sys.argv[1:]:
+        if arg == '-v' or arg == "--version":
+            print("1.0.0")
+            sys.exit()
+        elif arg == '-h' or arg == '--help':
+            usage()
+            sys.exit()
+        elif arg == '-i' or arg == '--ignore':
+            PREPROCESS_FLAG = ""
+        elif arg == '-c' or arg == '--clear':
+            OPTION_CLEAR_PICTURES = 1
+        elif arg == '-a' or arg == '--address':
+            OPTION_QUERY_ADDRESS = 0
+        elif arg == '-d' or arg == '--debug':
+            OPTION_DEBUG = 1
+    PICTURE_FOLDER = sys.argv[1]
+    process()
+
+
+
