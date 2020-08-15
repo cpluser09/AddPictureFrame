@@ -132,7 +132,7 @@ def add_frame(input_file, output_path):
     #    print("tag: %s, value: %s" % (key, exif[key]))
 
     # GPS
-    location = "TTTTTTT"
+    location = ""
     if OPTION_QUERY_ADDRESS == 1:
         location = queryAddr(exif)
         print(location)
@@ -165,7 +165,7 @@ def add_frame(input_file, output_path):
 
     # draw frame line
     draw_frame(draw, 0, 0, frame_width, frame_height, "black", 12)
-    draw_frame(draw, left, top, resize_width, resize_height, "black", 3)
+    #draw_frame(draw, left, top, resize_width, resize_height, "black", 3)
 
     # calculate output file path
     riginal_path, original_file_name = path.split(input_file)
