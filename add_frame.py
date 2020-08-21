@@ -164,8 +164,8 @@ def add_frame(input_file, output_path):
             draw.text((left+resize_width + 12, top + resize_height - 38), location, font=font, fill=(230, 230, 230))
 
     # draw frame line
-    draw_frame(draw, 0, 0, frame_width, frame_height, "black", 12)
-    #draw_frame(draw, left, top, resize_width, resize_height, "black", 3)
+    # draw_frame(draw, 0, 0, frame_width, frame_height, "black", 12)
+    # draw_frame(draw, left, top, resize_width, resize_height, "black", 3)
 
     # calculate output file path
     riginal_path, original_file_name = path.split(input_file)
