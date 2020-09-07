@@ -22,7 +22,14 @@ RESIZE_WIDTH_LANDSCAPE = 770
 RESIZE_WIDTH_PORTRAIT = 400
 TEXT_FONT_SIZE = 14
 
-def queryAddr(exif):
+FRAME_MODE_CLASSIC      = 1
+FRAME_MODE_SHOT_PARAM   = 2
+FRAME_MODE_FILM         = 4
+FRAME_MODE_LIST         = {FRAME_MODE_CLASSIC:"CLASSIC", FRAME_MODE_SHOT_PARAM:"PARAM", FRAME_MODE_FILM:"FILM"}
+FRAME_MODE              = FRAME_MODE_CLASSIC + FRAME_MODE_SHOT_PARAM
+is_read_mode            = 0
+
+def query_addr(exif):
     if "GPS GPSLongitudeRef" not in exif.keys():
         return ""
     # 经度
@@ -78,19 +85,7 @@ def draw_frame(ctx, x, y, width, height, color, line_width):
     ctx.line((x+width+offset, y+height, x-offset, y+height), color, line_width)
     ctx.line((x, y+height, x, y), color, line_width+1)
 
-def add_frame(input_file, output_path):
-    # check landscape or portrait
-    img_resize = Image.open(input_file).convert("RGBA")
-    origin_width, origin_height = img_resize.size
-    is_landscape = (origin_width >= origin_height)
-
-    # calculate resize's height
-    resize_width = RESIZE_WIDTH_LANDSCAPE
-    if is_landscape != True:
-        resize_width = RESIZE_WIDTH_PORTRAIT
-    wpercent = (resize_width/float(img_resize.size[0]))
-    resize_height = int((float(img_resize.size[1])*float(wpercent)))
-
+def get_frame_rect_classic(is_landscape, resize_width, resize_height):
     # calculate frame size
     frame_width = (int)(resize_width * 1.13)
     frame_width += (frame_width % 2)
@@ -107,34 +102,22 @@ def add_frame(input_file, output_path):
     if is_landscape != True:
         left = (int)(frame_width * 0.05) 
         top = (int)((frame_height - resize_height) / 2)
+    return (left, top, frame_width, frame_height, (255, 255, 255))
 
-    # font size
-    if is_landscape == True:
-        if resize_width > 1200:
-            TEXT_FONT_SIZE = 18
-    else:
-        if resize_height > 800:
-            TEXT_FONT_SIZE = 18
+def get_frame_rect(frame_mode, is_landscape, resize_width, resize_height):
+    if frame_mode == FRAME_MODE_CLASSIC:
+        return get_frame_rect_classic(is_landscape, resize_width, resize_height)
+    return get_frame_rect_classic(is_landscape, resize_width, resize_height)
 
-    # resize picture
-    img_resize = img_resize.resize((resize_width, resize_height), Image.ANTIALIAS)
-
-    # create background image
-    img_frame = Image.new('RGBA', (frame_width, frame_height), (255, 255, 255))
-
-    # overlay picture
-    img_frame.paste(img_resize, (left, top))
-
-    # draw text
+def get_basic_info(frame_mode, input_file):
     imgexif = open(input_file, 'rb')
     exif = exifread.process_file(imgexif)
-    #for key in exif.keys():
+    # for key in exif.keys():
     #    print("tag: %s, value: %s" % (key, exif[key]))
-
     # GPS
     location = ""
     if OPTION_QUERY_ADDRESS == 1:
-        location = queryAddr(exif)
+        location = query_addr(exif)
         print(location)
 
     # shot time
@@ -152,47 +135,109 @@ def add_frame(input_file, output_path):
         idx = desc.find("NOMO")
         if desc != "" and  -1 != idx:
             desc = desc[(idx+len("NOMO ")):(len(desc)-1)]
-    font = ImageFont.truetype("msyh.ttf", 14)
-    draw = ImageDraw.Draw(img_frame)
+    if frame_mode == FRAME_MODE_SHOT_PARAM:
+        if "EXIF FNumber" in exif.keys():
+            desc = desc + " F" + exif["EXIF FNumber"].printable
+        if "EXIF ExposureTime" in exif.keys():
+            desc = desc + " " + exif["EXIF ExposureTime"].printable
+        if "EXIF ISOSpeedRatings" in exif.keys():
+            desc = desc + " ISO" + exif["EXIF ISOSpeedRatings"].printable
+        # if "EXIF ExposureBiasValue" in exif.keys():
+        #     ev = float(exif["EXIF ExposureBiasValue"]) * 100.0 / 33.0    
+        #     desc = desc + (" EV%d", ev)
+        # if "EXIF ExposureMode" in exif.keys():
+        #     desc = desc + " ExpM" + exif["EXIF ExposureMode"].printable
+        if "EXIF FocalLengthIn35mmFilm" in exif.keys():
+            desc = desc + " " + exif["EXIF FocalLengthIn35mmFilm"].printable + "MM"
+        elif "EXIF FocalLength" in exif.keys():
+            desc = desc + " " + exif["EXIF FocalLength"].printable + "MM"
+        if "EXIF ExposureProgram" in exif.keys():
+            desc = desc + " " + exif["EXIF ExposureProgram"].printable            
+        if "EXIF ColorSpace" in exif.keys():
+            desc = desc + " " + exif["EXIF ColorSpace"].printable
+    return (location, date_time, shot_time, desc)
+
+
+def add_frame(input_file, output_path):
+    # check landscape or portrait
+    img_resize = Image.open(input_file).convert("RGBA")
+    origin_width, origin_height = img_resize.size
+    is_landscape = (origin_width >= origin_height)
+
+    # calculate resize's height
+    resize_width = RESIZE_WIDTH_LANDSCAPE
+    if is_landscape != True:
+        resize_width = RESIZE_WIDTH_PORTRAIT
+    wpercent = (resize_width/float(img_resize.size[0]))
+    resize_height = int((float(img_resize.size[1])*float(wpercent)))
+    # font size
     if is_landscape == True:
-        draw_text = ("%s  %dx%d  %s  %s" % (date_time, resize_width, resize_height, desc, location))
-        draw.text((left, top + resize_height + 10), draw_text, font=font, fill=(230, 230, 230))
+        if resize_width > 1200:
+            TEXT_FONT_SIZE = 18
     else:
-        draw_text = ("%s  %dx%d  %s" % (date_time, resize_width, resize_height, desc))
-        draw.text((left+resize_width + 12, top + resize_height - 16), draw_text, font=font, fill=(230, 230, 230))
-        if location != "":
-            draw.text((left+resize_width + 12, top + resize_height - 38), location, font=font, fill=(230, 230, 230))
+        if resize_height > 800:
+            TEXT_FONT_SIZE = 18
+    
+    # resize picture
+    img_resize = img_resize.resize((resize_width, resize_height), Image.ANTIALIAS)
+    
+    for mode in FRAME_MODE_LIST:
+        if mode & FRAME_MODE != mode:
+            continue
+        
+        location, date_time, shot_time, desc = get_basic_info(mode, input_file)
+        left, top, frame_width, frame_height, bg_color = get_frame_rect(mode, is_landscape, resize_width, resize_height)
 
-    # draw frame line
-    # draw_frame(draw, 0, 0, frame_width, frame_height, "black", 12)
-    # draw_frame(draw, left, top, resize_width, resize_height, "black", 3)
+        # create background image
+        img_frame = Image.new('RGBA', (frame_width, frame_height), bg_color)
 
-    # calculate output file path
-    riginal_path, original_file_name = path.split(input_file)
-    output_name, output_ext_name = path.splitext(original_file_name)
-    text_time = shot_time.replace(":", "-")
-    text_time = text_time.replace(" ", "_")
-    output_name += ("_%s_%dx%d%s" % (text_time, frame_width, frame_height, MY_SPECIAL_TAG))
-    output_name += output_ext_name
-    #output_folder = ("%s/%s" % (riginal_path, ADDITIONAL_OUTPUT_FOLDER))
-    output_folder = output_path
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-    output_full_path = ("%s/%s" % (output_folder, output_name))
+        # overlay picture
+        img_frame.paste(img_resize, (left, top))
 
-    # show picture used for debug
-    if OPTION_DEBUG == 1:
-        img_frame.show()
+        # draw text
+        font = ImageFont.truetype("msyh.ttf", 14)
+        draw = ImageDraw.Draw(img_frame)
+        if is_landscape == True:
+            draw_text = ("%s  %dx%d  %s  %s" % (date_time, resize_width, resize_height, desc, location))
+            draw.text((left, top + resize_height + 10), draw_text, font=font, fill=(230, 230, 230))
+        else:
+            draw_text = ("%s  %dx%d  %s" % (date_time, resize_width, resize_height, desc))
+            draw.text((left+resize_width + 12, top + resize_height - 16), draw_text, font=font, fill=(230, 230, 230))
+            if location != "":
+                draw.text((left+resize_width + 12, top + resize_height - 38), location, font=font, fill=(230, 230, 230))
 
-    # write file
-    img_frame = img_frame.convert("RGB")
-    img_frame.save(output_full_path, quality=100)
-    #shutil.copy(output_name, additional_output_path)
-    print(output_full_path)
+        # draw frame line
+        # draw_frame(draw, 0, 0, frame_width, frame_height, "black", 12)
+        # draw_frame(draw, left, top, resize_width, resize_height, "black", 3)
 
-def GetMeThePictures(mypath):
-    OriginalPictures = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-    return OriginalPictures
+        # calculate output file path
+        riginal_path, original_file_name = path.split(input_file)
+        output_name, output_ext_name = path.splitext(original_file_name)
+        output_name = FRAME_MODE_LIST[mode] + "_" + output_name
+        text_time = shot_time.replace(":", "-")
+        text_time = text_time.replace(" ", "_")
+        output_name += ("_%s_%dx%d_%s" % (text_time, frame_width, frame_height, MY_SPECIAL_TAG))
+        output_name += output_ext_name
+        #output_folder = ("%s/%s" % (riginal_path, ADDITIONAL_OUTPUT_FOLDER))
+        output_folder = output_path
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+        output_full_path = ("%s/%s" % (output_folder, output_name))
+
+        # show picture used for debug
+        if OPTION_DEBUG == 1:
+            img_frame.show()
+
+        # write file
+        img_frame = img_frame.convert("RGB")
+        img_frame.save(output_full_path, quality=100)
+        #shutil.copy(output_name, additional_output_path)
+        print(output_full_path)
+        # end of for loop
+
+# def GetMeThePictures(mypath):
+#     OriginalPictures = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+#     return OriginalPictures
 
 def search_files(dirname):
     filter = [".jpg", ".JPG", ".jpeg", ".JPEG"]
@@ -227,6 +272,7 @@ arguments:
     -i                  ignore PREPROCESS_FLAG("_2000.") flag from source picture
     -c                  clear/delete all pictures on output folder before resize
     -a                  disable parse shot address from GPS info
+    -m                  specify frame mode
     -d                  enable debug mode
     -h, --help			show this help message and exit
     -v, --version		show version information and exit
@@ -264,9 +310,9 @@ def process():
 if __name__ == '__main__':
     if len(sys.argv) == 1:
         print("arguments error!\r\n-h shows usage.")
-        # PICTURE_FOLDER = "/Users/junlin/test/gps"
-        # PREPROCESS_FLAG = ""
-        # process()
+        PICTURE_FOLDER = "/Users/junlin/test/gps"
+        PREPROCESS_FLAG = ""
+        process()
         sys.exit()
     for arg in sys.argv[1:]:
         if arg == '-v' or arg == "--version":
@@ -281,8 +327,14 @@ if __name__ == '__main__':
             OPTION_CLEAR_PICTURES = 1
         elif arg == '-a' or arg == '--address':
             OPTION_QUERY_ADDRESS = 0
+        elif arg == '-m' or arg == '--mode':
+            is_read_mode = 1
         elif arg == '-d' or arg == '--debug':
             OPTION_DEBUG = 1
+        elif is_read_mode == 1:
+            is_read_mode = 0
+            FRAME_MODE = arg
+
     PICTURE_FOLDER = sys.argv[1]
     process()
 
