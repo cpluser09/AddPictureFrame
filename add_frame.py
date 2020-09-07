@@ -109,16 +109,11 @@ def get_frame_rect(frame_mode, is_landscape, resize_width, resize_height):
         return get_frame_rect_classic(is_landscape, resize_width, resize_height)
     return get_frame_rect_classic(is_landscape, resize_width, resize_height)
 
-def get_basic_info(frame_mode, input_file):
-    imgexif = open(input_file, 'rb')
-    exif = exifread.process_file(imgexif)
+def get_basic_info(frame_mode, exif):
+    # imgexif = open(input_file, 'rb')
+    # exif = exifread.process_file(imgexif)
     # for key in exif.keys():
     #    print("tag: %s, value: %s" % (key, exif[key]))
-    # GPS
-    location = ""
-    if OPTION_QUERY_ADDRESS == 1:
-        location = query_addr(exif)
-        print(location)
 
     # shot time
     shot_time = "unkown shot time"
@@ -132,6 +127,7 @@ def get_basic_info(frame_mode, input_file):
     desc = ""
     if "Image ImageDescription" in exif.keys():
         desc = exif["Image ImageDescription"].printable
+        desc = desc.strip()
         idx = desc.find("NOMO")
         if desc != "" and  -1 != idx:
             desc = desc[(idx+len("NOMO ")):(len(desc)-1)]
@@ -155,10 +151,19 @@ def get_basic_info(frame_mode, input_file):
             desc = desc + " " + exif["EXIF ExposureProgram"].printable            
         if "EXIF ColorSpace" in exif.keys():
             desc = desc + " " + exif["EXIF ColorSpace"].printable
-    return (location, date_time, shot_time, desc)
+    return (date_time, shot_time, desc)
 
 
 def add_frame(input_file, output_path):
+    imgexif = open(input_file, 'rb')
+    exif = exifread.process_file(imgexif)
+
+    # GPS
+    location = ""
+    if OPTION_QUERY_ADDRESS == 1:
+        location = query_addr(exif)
+        print(location)
+
     # check landscape or portrait
     img_resize = Image.open(input_file).convert("RGBA")
     origin_width, origin_height = img_resize.size
@@ -184,8 +189,7 @@ def add_frame(input_file, output_path):
     for mode in FRAME_MODE_LIST:
         if mode & FRAME_MODE != mode:
             continue
-        
-        location, date_time, shot_time, desc = get_basic_info(mode, input_file)
+        date_time, shot_time, desc = get_basic_info(mode, exif)
         left, top, frame_width, frame_height, bg_color = get_frame_rect(mode, is_landscape, resize_width, resize_height)
 
         # create background image
@@ -216,7 +220,7 @@ def add_frame(input_file, output_path):
         output_name = FRAME_MODE_LIST[mode] + "_" + output_name
         text_time = shot_time.replace(":", "-")
         text_time = text_time.replace(" ", "_")
-        output_name += ("_%s_%dx%d_%s" % (text_time, frame_width, frame_height, MY_SPECIAL_TAG))
+        output_name += ("_%s_%dx%d%s" % (text_time, frame_width, frame_height, MY_SPECIAL_TAG))
         output_name += output_ext_name
         #output_folder = ("%s/%s" % (riginal_path, ADDITIONAL_OUTPUT_FOLDER))
         output_folder = output_path
