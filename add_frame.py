@@ -6,7 +6,7 @@ import requests
 import exifread
 from os.path import isfile, join
 from os import listdir, path, remove
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
 
 
 PICTURE_FOLDER = ""
@@ -28,6 +28,9 @@ FRAME_MODE_FILM         = 4
 FRAME_MODE_LIST         = {FRAME_MODE_CLASSIC:"CLASSIC", FRAME_MODE_SHOT_PARAM:"PARAM", FRAME_MODE_FILM:"FILM"}
 FRAME_MODE              = FRAME_MODE_CLASSIC + FRAME_MODE_SHOT_PARAM
 is_read_mode            = 0
+
+ORIENT_ROTATES = {"Horizontal (normal)":1, "Mirrored horizontal":2, "Rotated 180":3, "Mirrored vertical":4,
+                  "Mirrored horizontal then rotated 90 CCW":5, "Rotated 90 CW":6, "Mirrored horizontal then rotated 90 CW":7, "Rotated 90 CCW":8}
 
 def query_addr(exif):
     if "GPS GPSLongitudeRef" not in exif.keys():
@@ -153,6 +156,35 @@ def get_basic_info(frame_mode, exif):
             desc = desc + " " + exif["EXIF ColorSpace"].printable
     return (date_time, shot_time, desc)
 
+def check_orientation(image, exif):
+    if "Image Orientation" in exif.keys():
+        orientation = ORIENT_ROTATES[exif["Image Orientation"].printable]
+    if orientation == 1:
+        return image
+    elif orientation == 2:
+        # left-to-right mirror
+        return ImageOps.mirror(image)
+    elif orientation == 3:
+        # rotate 180
+        return image.transpose(Image.ROTATE_180)
+    elif orientation == 4:
+        # top-to-bottom mirror
+        return ImageOps.flip(image)
+    elif orientation == 5:
+        # top-to-left mirror
+        return ImageOps.mirror(image.transpose(Image.ROTATE_270))
+    elif orientation == 6:
+        # rotate 270
+        return image.transpose(Image.ROTATE_270)
+    elif orientation == 7:
+        # top-to-right mirror
+        return ImageOps.mirror(image.transpose(Image.ROTATE_90))
+    elif orientation == 8:
+        # rotate 90
+        return image.transpose(Image.ROTATE_90)    
+    else:
+        return image    
+
 
 def add_frame(input_file, output_path):
     imgexif = open(input_file, 'rb')
@@ -166,6 +198,7 @@ def add_frame(input_file, output_path):
 
     # check landscape or portrait
     img_resize = Image.open(input_file).convert("RGBA")
+    img_resize = check_orientation(img_resize, exif)
     origin_width, origin_height = img_resize.size
     is_landscape = (origin_width >= origin_height)
 
@@ -181,8 +214,8 @@ def add_frame(input_file, output_path):
             TEXT_FONT_SIZE = 18
     else:
         if resize_height > 800:
-            TEXT_FONT_SIZE = 18
-    
+            TEXT_FONT_SIZE = 18   
+       
     # resize picture
     img_resize = img_resize.resize((resize_width, resize_height), Image.ANTIALIAS)
     
