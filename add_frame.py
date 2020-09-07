@@ -310,9 +310,9 @@ def process():
 if __name__ == '__main__':
     if len(sys.argv) == 1:
         print("arguments error!\r\n-h shows usage.")
-        PICTURE_FOLDER = "/Users/junlin/test/gps"
-        PREPROCESS_FLAG = ""
-        process()
+        # PICTURE_FOLDER = "/Users/junlin/test/gps"
+        # PREPROCESS_FLAG = ""
+        # process()
         sys.exit()
     for arg in sys.argv[1:]:
         if arg == '-v' or arg == "--version":
