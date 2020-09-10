@@ -25,8 +25,9 @@ TEXT_FONT_SIZE = 14
 FRAME_MODE_CLASSIC      = 1
 FRAME_MODE_SHOT_PARAM   = 2
 FRAME_MODE_FILM         = 4
-FRAME_MODE_LIST         = {FRAME_MODE_CLASSIC:"CLASSIC", FRAME_MODE_SHOT_PARAM:"PARAM", FRAME_MODE_FILM:"FILM"}
-FRAME_MODE              = FRAME_MODE_CLASSIC + FRAME_MODE_SHOT_PARAM
+FRAME_MODE_INSTAGRAM    = 8
+FRAME_MODE_LIST         = {FRAME_MODE_CLASSIC:"CLASSIC", FRAME_MODE_SHOT_PARAM:"PARAM", FRAME_MODE_FILM:"FILM", FRAME_MODE_INSTAGRAM:"INSTA"}
+FRAME_MODE              = FRAME_MODE_CLASSIC + FRAME_MODE_SHOT_PARAM + FRAME_MODE_INSTAGRAM
 is_read_mode            = 0
 
 ORIENT_ROTATES = {"Horizontal (normal)":1, "Mirrored horizontal":2, "Rotated 180":3, "Mirrored vertical":4,
@@ -88,28 +89,81 @@ def draw_frame(ctx, x, y, width, height, color, line_width):
     ctx.line((x+width+offset, y+height, x-offset, y+height), color, line_width)
     ctx.line((x, y+height, x, y), color, line_width+1)
 
-def get_frame_rect_classic(is_landscape, resize_width, resize_height):
+def get_frame_rect_instagram(is_landscape, resize_width, resize_height):
     # calculate frame size
-    frame_width = (int)(resize_width * 1.13)
+    frame_width = resize_width
     frame_width += (frame_width % 2)
-    frame_height = (int)(frame_width * 0.89)
-    frame_height += (frame_height % 2)
-    if is_landscape != True:
+    frame_height = frame_width
+    if resize_width == resize_height:
+        frame_width = (int)(resize_width * 1.6)
+        frame_width += (frame_width % 2)
+        frame_height = frame_width
+    elif is_landscape != True:
         frame_width = (int)(resize_width * 1.7)
         frame_width += (frame_width % 2)
         frame_height = frame_width
 
     # calculate picture's left/top
     left = (int)((frame_width - resize_width) / 2.0)
-    top = (int)((frame_height - resize_height) / 4.1)
-    if is_landscape != True:
+    top = (int)((frame_height - resize_height) / 2.0)
+    if resize_width == resize_height:
+        left = (int)((frame_width - resize_width) / 2.0)
+        top = (int)((frame_height - resize_height) / 2.0)
+    elif is_landscape != True:
         left = (int)(frame_width * 0.05) 
         top = (int)((frame_height - resize_height) / 2)
-    return (left, top, frame_width, frame_height, (255, 255, 255))
+
+    # calculate postion of text
+    text_left = left + 10
+    text_top = top + resize_height + 2
+    if resize_width < resize_height:
+        text_left = left + resize_width + 8
+        text_top = top + resize_height - 16
+    elif resize_width == resize_height:
+        text_left = left
+        text_top = top + resize_height + 2
+    return (left, top, frame_width, frame_height, (255, 255, 255), text_left, text_top)    
+
+def get_frame_rect_classic(is_landscape, resize_width, resize_height):
+    # calculate frame size
+    frame_width = (int)(resize_width * 1.13)
+    frame_width += (frame_width % 2)
+    frame_height = (int)(frame_width * 0.89)
+    frame_height += (frame_height % 2)
+    if resize_width < resize_height:
+        frame_width = (int)(resize_width * 1.7)
+        frame_width += (frame_width % 2)
+        frame_height = frame_width
+    elif resize_width == resize_height:
+        frame_width = (int)(resize_width * 1.2)
+        frame_width += (frame_width % 2)
+        frame_height = (int)(frame_width * 1.2)
+        frame_height += (frame_height % 2)
+
+    # calculate picture's left/top
+    left = (int)((frame_width - resize_width) / 2.0)
+    top = (int)((frame_height - resize_height) / 4.1)
+    if resize_width < resize_height:
+        left = (int)(frame_width * 0.05) 
+        top = (int)((frame_height - resize_height) / 2)
+    elif resize_width == resize_height:
+        left = (int)((frame_width - resize_width) / 2.0)
+        top = (int)((frame_height - resize_height) / 2.0) - (int)((frame_height - frame_width) / 2.0)
+
+    # calculate postion of text
+    text_left = left
+    text_top = top + resize_height + 2
+    if resize_width < resize_height:
+        text_left = left + resize_width + 8
+        text_top = top + resize_height - 16
+      
+    return (left, top, frame_width, frame_height, (255, 255, 255), text_left, text_top)
 
 def get_frame_rect(frame_mode, is_landscape, resize_width, resize_height):
     if frame_mode == FRAME_MODE_CLASSIC:
         return get_frame_rect_classic(is_landscape, resize_width, resize_height)
+    if frame_mode == FRAME_MODE_INSTAGRAM:
+        return get_frame_rect_instagram(is_landscape, resize_width, resize_height)
     return get_frame_rect_classic(is_landscape, resize_width, resize_height)
 
 def get_basic_info(frame_mode, exif):
@@ -200,7 +254,7 @@ def add_frame(input_file, output_path):
     img_resize = Image.open(input_file).convert("RGBA")
     img_resize = check_orientation(img_resize, exif)
     origin_width, origin_height = img_resize.size
-    is_landscape = (origin_width >= origin_height)
+    is_landscape = (origin_width > origin_height)
 
     # calculate resize's height
     resize_width = RESIZE_WIDTH_LANDSCAPE
@@ -222,10 +276,15 @@ def add_frame(input_file, output_path):
     for mode in FRAME_MODE_LIST:
         if mode & FRAME_MODE != mode:
             continue
+        loc = location
+        # remove location info for instagram
+        if mode == FRAME_MODE_INSTAGRAM:
+            loc = ""
         date_time, shot_time, desc = get_basic_info(mode, exif)
-        left, top, frame_width, frame_height, bg_color = get_frame_rect(mode, is_landscape, resize_width, resize_height)
+        left, top, frame_width, frame_height, bg_color, text_left, text_top = get_frame_rect(mode, is_landscape, resize_width, resize_height)
 
         # create background image
+        print(frame_width, frame_height)
         img_frame = Image.new('RGBA', (frame_width, frame_height), bg_color)
 
         # overlay picture
@@ -234,14 +293,14 @@ def add_frame(input_file, output_path):
         # draw text
         font = ImageFont.truetype("msyh.ttf", 14)
         draw = ImageDraw.Draw(img_frame)
-        if is_landscape == True:
-            draw_text = ("%s  %dx%d  %s  %s" % (date_time, resize_width, resize_height, desc, location))
-            draw.text((left, top + resize_height + 10), draw_text, font=font, fill=(230, 230, 230))
+        if resize_width >= resize_height:
+            draw_text = ("%s %dx%d %s %s" % (date_time, resize_width, resize_height, desc, loc))
+            draw.text((text_left, text_top), draw_text, font=font, fill=(230, 230, 230))
         else:
             draw_text = ("%s  %dx%d  %s" % (date_time, resize_width, resize_height, desc))
-            draw.text((left+resize_width + 12, top + resize_height - 16), draw_text, font=font, fill=(230, 230, 230))
-            if location != "":
-                draw.text((left+resize_width + 12, top + resize_height - 38), location, font=font, fill=(230, 230, 230))
+            draw.text((text_left, text_top), draw_text, font=font, fill=(230, 230, 230))
+            if loc != "":
+                draw.text((text_left, text_top - 22), loc, font=font, fill=(230, 230, 230))
 
         # draw frame line
         # draw_frame(draw, 0, 0, frame_width, frame_height, "black", 12)
