@@ -212,6 +212,7 @@ def get_basic_info(frame_mode, exif):
     return (date_time, shot_time, desc)
 
 def check_orientation(image, exif):
+    orientation = 1
     if "Image Orientation" in exif.keys():
         orientation = ORIENT_ROTATES[exif["Image Orientation"].printable]
     if orientation == 1:
@@ -287,7 +288,6 @@ def add_frame(input_file, output_path):
         left, top, frame_width, frame_height, bg_color, text_left, text_top = get_frame_rect(mode, resize_width, resize_height)
 
         # create background image
-        print(frame_width, frame_height)
         img_frame = Image.new('RGBA', (frame_width, frame_height), bg_color)
 
         # overlay picture
