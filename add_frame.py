@@ -20,6 +20,7 @@ OPTION_QUERY_ADDRESS = 1
 
 RESIZE_WIDTH_LANDSCAPE = 770
 RESIZE_WIDTH_PORTRAIT = 400
+RESIZE_WIDTH_SQUARE = 500
 TEXT_FONT_SIZE = 14
 
 FRAME_MODE_CLASSIC      = 1
@@ -89,7 +90,7 @@ def draw_frame(ctx, x, y, width, height, color, line_width):
     ctx.line((x+width+offset, y+height, x-offset, y+height), color, line_width)
     ctx.line((x, y+height, x, y), color, line_width+1)
 
-def get_frame_rect_instagram(is_landscape, resize_width, resize_height):
+def get_frame_rect_instagram(resize_width, resize_height):
     # calculate frame size
     frame_width = resize_width
     frame_width += (frame_width % 2)
@@ -98,7 +99,7 @@ def get_frame_rect_instagram(is_landscape, resize_width, resize_height):
         frame_width = (int)(resize_width * 1.6)
         frame_width += (frame_width % 2)
         frame_height = frame_width
-    elif is_landscape != True:
+    elif resize_width < resize_height:
         frame_width = (int)(resize_width * 1.7)
         frame_width += (frame_width % 2)
         frame_height = frame_width
@@ -109,12 +110,12 @@ def get_frame_rect_instagram(is_landscape, resize_width, resize_height):
     if resize_width == resize_height:
         left = (int)((frame_width - resize_width) / 2.0)
         top = (int)((frame_height - resize_height) / 2.0)
-    elif is_landscape != True:
+    elif resize_width < resize_height:
         left = (int)(frame_width * 0.05) 
         top = (int)((frame_height - resize_height) / 2)
 
     # calculate postion of text
-    text_left = left + 10
+    text_left = left + 2
     text_top = top + resize_height + 2
     if resize_width < resize_height:
         text_left = left + resize_width + 8
@@ -124,7 +125,7 @@ def get_frame_rect_instagram(is_landscape, resize_width, resize_height):
         text_top = top + resize_height + 2
     return (left, top, frame_width, frame_height, (255, 255, 255), text_left, text_top)    
 
-def get_frame_rect_classic(is_landscape, resize_width, resize_height):
+def get_frame_rect_classic(resize_width, resize_height):
     # calculate frame size
     frame_width = (int)(resize_width * 1.13)
     frame_width += (frame_width % 2)
@@ -159,12 +160,12 @@ def get_frame_rect_classic(is_landscape, resize_width, resize_height):
       
     return (left, top, frame_width, frame_height, (255, 255, 255), text_left, text_top)
 
-def get_frame_rect(frame_mode, is_landscape, resize_width, resize_height):
+def get_frame_rect(frame_mode, resize_width, resize_height):
     if frame_mode == FRAME_MODE_CLASSIC:
-        return get_frame_rect_classic(is_landscape, resize_width, resize_height)
+        return get_frame_rect_classic(resize_width, resize_height)
     if frame_mode == FRAME_MODE_INSTAGRAM:
-        return get_frame_rect_instagram(is_landscape, resize_width, resize_height)
-    return get_frame_rect_classic(is_landscape, resize_width, resize_height)
+        return get_frame_rect_instagram(resize_width, resize_height)
+    return get_frame_rect_classic(resize_width, resize_height)
 
 def get_basic_info(frame_mode, exif):
     # imgexif = open(input_file, 'rb')
@@ -258,8 +259,10 @@ def add_frame(input_file, output_path):
 
     # calculate resize's height
     resize_width = RESIZE_WIDTH_LANDSCAPE
-    if is_landscape != True:
+    if origin_width < origin_height:
         resize_width = RESIZE_WIDTH_PORTRAIT
+    elif origin_width == origin_height:
+        resize_width = RESIZE_WIDTH_SQUARE
     wpercent = (resize_width/float(img_resize.size[0]))
     resize_height = int((float(img_resize.size[1])*float(wpercent)))
     # font size
@@ -281,7 +284,7 @@ def add_frame(input_file, output_path):
         if mode == FRAME_MODE_INSTAGRAM:
             loc = ""
         date_time, shot_time, desc = get_basic_info(mode, exif)
-        left, top, frame_width, frame_height, bg_color, text_left, text_top = get_frame_rect(mode, is_landscape, resize_width, resize_height)
+        left, top, frame_width, frame_height, bg_color, text_left, text_top = get_frame_rect(mode, resize_width, resize_height)
 
         # create background image
         print(frame_width, frame_height)
