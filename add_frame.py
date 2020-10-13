@@ -27,8 +27,10 @@ FRAME_MODE_CLASSIC      = 1
 FRAME_MODE_SHOT_PARAM   = 2
 FRAME_MODE_FILM         = 4
 FRAME_MODE_INSTAGRAM    = 8
-FRAME_MODE_LIST         = {FRAME_MODE_CLASSIC:"CLASSIC", FRAME_MODE_SHOT_PARAM:"PARAM", FRAME_MODE_FILM:"FILM", FRAME_MODE_INSTAGRAM:"INSTA"}
-FRAME_MODE              = FRAME_MODE_CLASSIC + FRAME_MODE_SHOT_PARAM + FRAME_MODE_INSTAGRAM
+FRAME_MODE_MAGNUM       = 16
+FRAME_MODE_LIST         = {FRAME_MODE_CLASSIC:"CLASSIC", FRAME_MODE_SHOT_PARAM:"PARAM", FRAME_MODE_FILM:"FILM", 
+                            FRAME_MODE_INSTAGRAM:"INSTA", FRAME_MODE_MAGNUM:"MAG"}
+FRAME_MODE              = FRAME_MODE_CLASSIC + FRAME_MODE_INSTAGRAM + FRAME_MODE_MAGNUM
 is_read_mode            = 0
 
 ORIENT_ROTATES = {"Horizontal (normal)":1, "Mirrored horizontal":2, "Rotated 180":3, "Mirrored vertical":4,
@@ -125,6 +127,38 @@ def get_frame_rect_instagram(resize_width, resize_height):
         text_top = top + resize_height + 2
     return (left, top, frame_width, frame_height, (255, 255, 255), text_left, text_top)    
 
+def get_frame_rect_magnum(resize_width, resize_height):
+    # calculate frame size
+    frame_width = (int)(resize_width * 1.03)
+    frame_width += (frame_width % 2)
+    frame_height = (int)(resize_height * 1.33)
+    frame_height += (frame_height % 2)
+    if resize_width < resize_height:
+        frame_width = (int)(resize_width * 1.05)
+        frame_width += (frame_width % 2)
+        frame_height = (int)(resize_height * 1.2)
+        frame_height += (frame_height % 2)
+
+
+    # calculate picture's left/top
+    left = (int)((frame_width - resize_width) / 2.0)
+    top = (int)((frame_height - resize_height) / 2.0)
+    # if resize_width < resize_height:
+    #     left = (int)(frame_width * 0.05) 
+    #     top = (int)((frame_height - resize_height) / 2)
+    # elif resize_width == resize_height:
+    #     left = (int)((frame_width - resize_width) / 2.0)
+    #     top = (int)((frame_height - resize_height) / 2.0) - (int)((frame_height - frame_width) / 2.0)
+
+    # calculate postion of text
+    text_left = left
+    text_top = top + resize_height + 2
+    # if resize_width < resize_height:
+    #     text_left = left + resize_width + 8
+    #     text_top = top + resize_height - 16
+      
+    return (left, top, frame_width, frame_height, (255, 255, 255), text_left, text_top)
+
 def get_frame_rect_classic(resize_width, resize_height):
     # calculate frame size
     frame_width = (int)(resize_width * 1.13)
@@ -158,13 +192,15 @@ def get_frame_rect_classic(resize_width, resize_height):
         text_left = left + resize_width + 8
         text_top = top + resize_height - 16
       
-    return (left, top, frame_width, frame_height, (255, 255, 255), text_left, text_top)
+    return (left, top, frame_width, frame_height, (255, 255, 255), text_left, text_top)    
 
 def get_frame_rect(frame_mode, resize_width, resize_height):
     if frame_mode == FRAME_MODE_CLASSIC:
         return get_frame_rect_classic(resize_width, resize_height)
     if frame_mode == FRAME_MODE_INSTAGRAM:
         return get_frame_rect_instagram(resize_width, resize_height)
+    if frame_mode == FRAME_MODE_MAGNUM:
+        return get_frame_rect_magnum(resize_width, resize_height)    
     return get_frame_rect_classic(resize_width, resize_height)
 
 def get_basic_info(frame_mode, exif):
@@ -180,7 +216,10 @@ def get_basic_info(frame_mode, exif):
         shot_time = exif["EXIF DateTimeOriginal"].printable
         date_time = shot_time.split(" ", 1)[0]
         date_time = date_time.split(":")
-        date_time = ("'%s %d %d" % (date_time[0][2:4], int(date_time[1]), int(date_time[2])))
+        if frame_mode == FRAME_MODE_MAGNUM:
+            date_time = ("%s-%d-%d" % (date_time[0][0:4], int(date_time[1]), int(date_time[2])))
+        else:
+            date_time = ("'%s %d %d" % (date_time[0][2:4], int(date_time[1]), int(date_time[2])))
     # for NOMO film
     desc = ""
     if "Image ImageDescription" in exif.keys():
@@ -294,16 +333,20 @@ def add_frame(input_file, output_path):
         img_frame.paste(img_resize, (left, top))
 
         # draw text
+        text_color = (230, 230, 230)
+        if mode == FRAME_MODE_MAGNUM:
+            text_color = (150, 150, 150)
+            
         font = ImageFont.truetype("msyh.ttf", 14)
         draw = ImageDraw.Draw(img_frame)
-        if resize_width >= resize_height:
+        if resize_width >= resize_height or mode == FRAME_MODE_MAGNUM:
             draw_text = ("%s %dx%d %s %s" % (date_time, resize_width, resize_height, desc, loc))
-            draw.text((text_left, text_top), draw_text, font=font, fill=(230, 230, 230))
+            draw.text((text_left, text_top), draw_text, font=font, fill=text_color)
         else:
             draw_text = ("%s  %dx%d  %s" % (date_time, resize_width, resize_height, desc))
-            draw.text((text_left, text_top), draw_text, font=font, fill=(230, 230, 230))
+            draw.text((text_left, text_top), draw_text, font=font, fill=text_color)
             if loc != "":
-                draw.text((text_left, text_top - 22), loc, font=font, fill=(230, 230, 230))
+                draw.text((text_left, text_top - 22), loc, font=font, fill=text_color)
 
         # draw frame line
         # draw_frame(draw, 0, 0, frame_width, frame_height, "black", 12)
@@ -411,6 +454,7 @@ if __name__ == '__main__':
         print("arguments error!\r\n-h shows usage.")
         # PICTURE_FOLDER = "/Users/junlin/test/gps"
         # PREPROCESS_FLAG = ""
+        # OPTION_DEBUG = 1
         # process()
         sys.exit()
     for arg in sys.argv[1:]:
