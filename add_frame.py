@@ -290,8 +290,8 @@ def get_resize_size(frame_mode, origin_width, origin_height, origin_file):
     wpercent = (resize_width/float(origin_file.size[0]))
     resize_height = int((float(origin_file.size[1])*float(wpercent)))
     if frame_mode == FRAME_MODE_MAGNUM:
-        resize_width = (int)(resize_width * 4 / 3)
-        resize_height = (int)(resize_height * 4 / 3)
+        resize_width = (int)(resize_width * 3 / 2)
+        resize_height = (int)(resize_height * 3 / 2)
     resize_width += (resize_width % 2)
     return resize_width, resize_height
 
@@ -303,7 +303,10 @@ def add_frame(input_file, output_path):
     location = ""
     if OPTION_QUERY_ADDRESS == 1:
         location = query_addr(exif)
-        print(location)
+        if len(location) > 0:
+            print(location)
+        else:
+            print("unknown location")
 
     # check landscape or portrait
     origin_file = Image.open(input_file).convert("RGBA")
@@ -447,8 +450,11 @@ def process():
             os.remove(fileName)
 
     # Resize the Original files.
+    idx = 1
     for each_picture in files:
+        print("\nNo.%04d" % idx)
         add_frame(each_picture, full_additional_path)
+        idx += 1
         if OPTION_DEBUG == 1:
             break
 
