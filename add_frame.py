@@ -31,6 +31,7 @@ FRAME_MODE_MAGNUM       = 16
 FRAME_MODE_LIST         = {FRAME_MODE_CLASSIC:"CLASSIC", FRAME_MODE_SHOT_PARAM:"PARAM", FRAME_MODE_FILM:"FILM", 
                             FRAME_MODE_INSTAGRAM:"INSTA", FRAME_MODE_MAGNUM:"MAG"}
 FRAME_MODE              = FRAME_MODE_CLASSIC + FRAME_MODE_INSTAGRAM + FRAME_MODE_MAGNUM
+FRAME_MODE = FRAME_MODE_MAGNUM + FRAME_MODE_CLASSIC
 is_read_mode            = 0
 
 ORIENT_ROTATES = {"Horizontal (normal)":1, "Mirrored horizontal":2, "Rotated 180":3, "Mirrored vertical":4,
@@ -280,6 +281,19 @@ def check_orientation(image, exif):
     else:
         return image    
 
+def get_resize_size(frame_mode, origin_width, origin_height, origin_file):
+    resize_width = RESIZE_WIDTH_LANDSCAPE
+    if origin_width < origin_height:
+        resize_width = RESIZE_WIDTH_PORTRAIT
+    elif origin_width == origin_height:
+        resize_width = RESIZE_WIDTH_SQUARE
+    wpercent = (resize_width/float(origin_file.size[0]))
+    resize_height = int((float(origin_file.size[1])*float(wpercent)))
+    if frame_mode == FRAME_MODE_MAGNUM:
+        resize_width = (int)(resize_width * 4 / 3)
+        resize_height = (int)(resize_height * 4 / 3)
+    resize_width += (resize_width % 2)
+    return resize_width, resize_height
 
 def add_frame(input_file, output_path):
     imgexif = open(input_file, 'rb')
@@ -292,33 +306,25 @@ def add_frame(input_file, output_path):
         print(location)
 
     # check landscape or portrait
-    img_resize = Image.open(input_file).convert("RGBA")
-    img_resize = check_orientation(img_resize, exif)
-    origin_width, origin_height = img_resize.size
+    origin_file = Image.open(input_file).convert("RGBA")
+    origin_file = check_orientation(origin_file, exif)
+    origin_width, origin_height = origin_file.size
     is_landscape = (origin_width > origin_height)
-
-    # calculate resize's height
-    resize_width = RESIZE_WIDTH_LANDSCAPE
-    if origin_width < origin_height:
-        resize_width = RESIZE_WIDTH_PORTRAIT
-    elif origin_width == origin_height:
-        resize_width = RESIZE_WIDTH_SQUARE
-    wpercent = (resize_width/float(img_resize.size[0]))
-    resize_height = int((float(img_resize.size[1])*float(wpercent)))
-    # font size
-    if is_landscape == True:
-        if resize_width > 1200:
-            TEXT_FONT_SIZE = 18
-    else:
-        if resize_height > 800:
-            TEXT_FONT_SIZE = 18   
-       
-    # resize picture
-    img_resize = img_resize.resize((resize_width, resize_height), Image.ANTIALIAS)
     
     for mode in FRAME_MODE_LIST:
         if mode & FRAME_MODE != mode:
             continue
+        resize_width, resize_height = get_resize_size(mode, origin_width, origin_height, origin_file)
+        # font size
+        if is_landscape == True:
+            if resize_width > 1200:
+                TEXT_FONT_SIZE = 18
+        else:
+            if resize_height > 800:
+                TEXT_FONT_SIZE = 18  
+        # resize picture
+        img_resize = origin_file.resize((resize_width, resize_height), Image.ANTIALIAS)
+
         loc = location
         # remove location info for instagram
         if mode == FRAME_MODE_INSTAGRAM:
