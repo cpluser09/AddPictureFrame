@@ -18,8 +18,8 @@ OPTION_DEBUG = 0
 OPTION_CLEAR_PICTURES = 1
 OPTION_QUERY_ADDRESS = 1
 
-RESIZE_WIDTH_LANDSCAPE = 770
-RESIZE_WIDTH_PORTRAIT = 510
+RESIZE_WIDTH_LANDSCAPE = 760
+RESIZE_WIDTH_PORTRAIT = 500
 RESIZE_WIDTH_SQUARE = 500
 TEXT_FONT_SIZE = 14
 
@@ -290,8 +290,8 @@ def get_resize_size(frame_mode, origin_width, origin_height, origin_file):
     wpercent = (resize_width/float(origin_file.size[0]))
     resize_height = int((float(origin_file.size[1])*float(wpercent)))
     if frame_mode == FRAME_MODE_MAGNUM:
-        resize_width = (int)(resize_width * 3 / 2)
-        resize_height = (int)(resize_height * 3 / 2)
+        resize_width = (int)(resize_width * 4 / 2)
+        resize_height = (int)(resize_height * 4 / 2)
     resize_width += (resize_width % 2)
     return resize_width, resize_height
 
@@ -322,10 +322,10 @@ def add_frame(input_file, output_path):
         font_size = TEXT_FONT_SIZE
         if is_landscape == True:
             if resize_width > 1200:
-                font_size = 18
+                font_size = 23
         else:
             if resize_height > 800:
-                font_size = 18  
+                font_size = 23  
         # resize picture
         img_resize = origin_file.resize((resize_width, resize_height), Image.ANTIALIAS)
 
@@ -459,7 +459,7 @@ def process():
             break
 
     # print ("output folder: %s" % full_additional_path)
-    print ("Done.")
+    print ("\nDONE.")
 
 
 if __name__ == '__main__':
