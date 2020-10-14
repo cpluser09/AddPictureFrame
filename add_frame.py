@@ -316,12 +316,13 @@ def add_frame(input_file, output_path):
             continue
         resize_width, resize_height = get_resize_size(mode, origin_width, origin_height, origin_file)
         # font size
+        font_size = TEXT_FONT_SIZE
         if is_landscape == True:
             if resize_width > 1200:
-                TEXT_FONT_SIZE = 18
+                font_size = 18
         else:
             if resize_height > 800:
-                TEXT_FONT_SIZE = 18  
+                font_size = 18  
         # resize picture
         img_resize = origin_file.resize((resize_width, resize_height), Image.ANTIALIAS)
 
@@ -343,7 +344,7 @@ def add_frame(input_file, output_path):
         if mode == FRAME_MODE_MAGNUM:
             text_color = (150, 150, 150)
             
-        font = ImageFont.truetype("msyh.ttf", 14)
+        font = ImageFont.truetype("FZWBJW.TTF", font_size)
         draw = ImageDraw.Draw(img_frame)
         if resize_width >= resize_height or mode == FRAME_MODE_MAGNUM:
             draw_text = ("%s %dx%d %s %s" % (date_time, resize_width, resize_height, desc, loc))
