@@ -140,23 +140,13 @@ def get_frame_rect_magnum(resize_width, resize_height):
         frame_height = (int)(resize_height * 1.2)
         frame_height += (frame_height % 2)
 
-
     # calculate picture's left/top
     left = (int)((frame_width - resize_width) / 2.0)
     top = (int)((frame_height - resize_height) / 2.0)
-    # if resize_width < resize_height:
-    #     left = (int)(frame_width * 0.05) 
-    #     top = (int)((frame_height - resize_height) / 2)
-    # elif resize_width == resize_height:
-    #     left = (int)((frame_width - resize_width) / 2.0)
-    #     top = (int)((frame_height - resize_height) / 2.0) - (int)((frame_height - frame_width) / 2.0)
 
     # calculate postion of text
     text_left = left
     text_top = top + resize_height + 2
-    # if resize_width < resize_height:
-    #     text_left = left + resize_width + 8
-    #     text_top = top + resize_height - 16
       
     return (left, top, frame_width, frame_height, (255, 255, 255), text_left, text_top)
 
@@ -343,7 +333,7 @@ def add_frame(input_file, output_path):
         img_frame.paste(img_resize, (left, top))
 
         # draw text
-        text_color = (230, 230, 230)
+        text_color = (200, 200, 200)
         if mode == FRAME_MODE_MAGNUM:
             text_color = (150, 150, 150)
             
@@ -386,10 +376,6 @@ def add_frame(input_file, output_path):
         #shutil.copy(output_name, additional_output_path)
         print(output_full_path)
         # end of for loop
-
-# def GetMeThePictures(mypath):
-#     OriginalPictures = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-#     return OriginalPictures
 
 def search_files(dirname):
     filter = [".jpg", ".JPG", ".jpeg", ".JPEG"]
