@@ -15,7 +15,7 @@ MY_SPECIAL_TAG = "_lcy"
 ADDITIONAL_OUTPUT_FOLDER = "_frame"
 
 OPTION_DEBUG = 0
-OPTION_CLEAR_PICTURES = 0
+OPTION_CLEAR_PICTURES = 1
 OPTION_QUERY_ADDRESS = 1
 
 RESIZE_WIDTH_LANDSCAPE = 770
@@ -474,7 +474,7 @@ if __name__ == '__main__':
         elif arg == '-i' or arg == '--ignore':
             PREPROCESS_FLAG = ""
         elif arg == '-c' or arg == '--clear':
-            OPTION_CLEAR_PICTURES = 1
+            OPTION_CLEAR_PICTURES = 0
         elif arg == '-a' or arg == '--address':
             OPTION_QUERY_ADDRESS = 0
         elif arg == '-m' or arg == '--mode':
