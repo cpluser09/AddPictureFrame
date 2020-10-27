@@ -130,25 +130,39 @@ def get_frame_rect_instagram(resize_width, resize_height):
 
 def get_frame_rect_magnum(resize_width, resize_height):
     # calculate frame size
-    frame_width = (int)(resize_width * 1.03)
+    frame_width = (int)(resize_width * 1.02)
     frame_width += (frame_width % 2)
-    frame_height = (int)(resize_height * 1.33)
-    frame_height += (frame_height % 2)
-    if resize_width < resize_height:
-        frame_width = (int)(resize_width * 1.05)
+    frame_height = frame_width
+    if resize_width == resize_height:
+        frame_width = (int)(resize_width * 1.6)
         frame_width += (frame_width % 2)
-        frame_height = (int)(resize_height * 1.2)
-        frame_height += (frame_height % 2)
+        frame_height = frame_width
+    elif resize_width < resize_height:
+        frame_width = (int)(resize_width * 1.7)
+        frame_width += (frame_width % 2)
+        frame_height = frame_width
 
     # calculate picture's left/top
     left = (int)((frame_width - resize_width) / 2.0)
     top = (int)((frame_height - resize_height) / 2.0)
+    if resize_width == resize_height:
+        left = (int)((frame_width - resize_width) / 2.0)
+        top = (int)((frame_height - resize_height) / 2.0)
+    elif resize_width < resize_height:
+        left = (int)(frame_width * 0.05) 
+        top = (int)((frame_height - resize_height) / 2)
 
     # calculate postion of text
     text_left = left
     text_top = top + resize_height + 2
-      
-    return (left, top, frame_width, frame_height, (255, 255, 255), text_left, text_top)
+    if resize_width < resize_height:
+        text_left = left + resize_width + 8
+        text_top = top + resize_height - 22
+    elif resize_width == resize_height:
+        text_left = left
+        text_top = top + resize_height + 2
+    return (left, top, frame_width, frame_height, (255, 255, 255), text_left, text_top)    
+
 
 def get_frame_rect_classic(resize_width, resize_height):
     # calculate frame size
@@ -333,20 +347,22 @@ def add_frame(input_file, output_path):
         img_frame.paste(img_resize, (left, top))
 
         # draw text
+        text_top_offset = 22
         text_color = (200, 200, 200)
         if mode == FRAME_MODE_MAGNUM:
             text_color = (150, 150, 150)
+            text_top_offset = 32
             
         font = ImageFont.truetype("FZWBJW.TTF", font_size)
         draw = ImageDraw.Draw(img_frame)
-        if resize_width >= resize_height or mode == FRAME_MODE_MAGNUM:
+        if resize_width >= resize_height:
             draw_text = ("%s %dx%d %s %s" % (date_time, resize_width, resize_height, desc, loc))
             draw.text((text_left, text_top), draw_text, font=font, fill=text_color)
         else:
             draw_text = ("%s  %dx%d  %s" % (date_time, resize_width, resize_height, desc))
             draw.text((text_left, text_top), draw_text, font=font, fill=text_color)
-            if loc != "":
-                draw.text((text_left, text_top - 22), loc, font=font, fill=text_color)
+            if loc != "":                    
+                draw.text((text_left, text_top - text_top_offset), loc, font=font, fill=text_color)
 
         # draw frame line
         # draw_frame(draw, 0, 0, frame_width, frame_height, "black", 12)
