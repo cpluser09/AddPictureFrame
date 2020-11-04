@@ -13,6 +13,7 @@ PICTURE_FOLDER = ""
 PREPROCESS_FLAG = "_2000."
 MY_SPECIAL_TAG = "_lcy"
 ADDITIONAL_OUTPUT_FOLDER = "_frame"
+AUTHOR = ""
 
 OPTION_DEBUG = 0
 OPTION_CLEAR_PICTURES = 1
@@ -358,11 +359,16 @@ def add_frame(input_file, output_path):
         if resize_width >= resize_height:
             draw_text = ("%s %dx%d %s %s" % (date_time, resize_width, resize_height, desc, loc))
             draw.text((text_left, text_top), draw_text, font=font, fill=text_color)
+            if mode == FRAME_MODE_MAGNUM:
+                draw.text((left+resize_width-50, text_top), AUTHOR, font=font, fill=text_color)
         else:
             draw_text = ("%s  %dx%d  %s" % (date_time, resize_width, resize_height, desc))
             draw.text((text_left, text_top), draw_text, font=font, fill=text_color)
             if loc != "":                    
                 draw.text((text_left, text_top - text_top_offset), loc, font=font, fill=text_color)
+            if mode == FRAME_MODE_MAGNUM:
+                draw.text((text_left, text_top - text_top_offset * 2), AUTHOR, font=font, fill=text_color)
+        
 
         # draw frame line
         # draw_frame(draw, 0, 0, frame_width, frame_height, "black", 12)
