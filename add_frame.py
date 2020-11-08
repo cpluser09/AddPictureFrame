@@ -305,13 +305,14 @@ def add_frame(input_file, output_path):
     exif = exifread.process_file(imgexif)
 
     # GPS
-    location = "上海"
+    location = ""
     if OPTION_QUERY_ADDRESS == 1:
         location = query_addr(exif)
         if len(location) > 0:
             print(location)
         else:
-            print("unknown location")
+            location = "上海"
+            print("unknown location, set deafult: %s" % location)
 
     # check landscape or portrait
     origin_file = Image.open(input_file).convert("RGBA")
@@ -473,7 +474,7 @@ def process():
 if __name__ == '__main__':
     if len(sys.argv) == 1:
         print("arguments error!\r\n-h shows usage.")
-        # PICTURE_FOLDER = "/Users/junlin/test/gps"
+        # PICTURE_FOLDER = "/Users/junlin/myPhoto/new/Photography18/20201004_万科/__process"
         # PREPROCESS_FLAG = ""
         # OPTION_DEBUG = 1
         # process()
