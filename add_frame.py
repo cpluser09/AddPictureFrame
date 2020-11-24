@@ -34,7 +34,7 @@ FRAME_MODE_YANSELF      = 32
 FRAME_MODE_LIST         = {FRAME_MODE_CLASSIC:"CLASSIC", FRAME_MODE_SHOT_PARAM:"PARAM", FRAME_MODE_FILM:"FILM", 
                             FRAME_MODE_INSTAGRAM:"INSTA", FRAME_MODE_MAGNUM:"MAG", FRAME_MODE_YANSELF:"YANSELF"}
 FRAME_MODE              = FRAME_MODE_CLASSIC + FRAME_MODE_INSTAGRAM + FRAME_MODE_MAGNUM + FRAME_MODE_YANSELF
-FRAME_MODE = FRAME_MODE_MAGNUM + FRAME_MODE_CLASSIC + FRAME_MODE_YANSELF
+FRAME_MODE = FRAME_MODE_MAGNUM + FRAME_MODE_CLASSIC + FRAME_MODE_YANSELF + FRAME_MODE_INSTAGRAM
 is_read_mode            = 0
 
 ORIENT_ROTATES = {"Horizontal (normal)":1, "Mirrored horizontal":2, "Rotated 180":3, "Mirrored vertical":4,
@@ -260,10 +260,10 @@ def get_basic_info(frame_mode, exif):
         shot_time = exif["EXIF DateTimeOriginal"].printable
         date_time = shot_time.split(" ", 1)[0]
         date_time = date_time.split(":")
-        if frame_mode == FRAME_MODE_MAGNUM or frame_mode == FRAME_MODE_YANSELF:
-            date_time = ("%s-%d-%d" % (date_time[0][0:4], int(date_time[1]), int(date_time[2])))
-        else:
-            date_time = ("'%s %d %d" % (date_time[0][2:4], int(date_time[1]), int(date_time[2])))
+        # if frame_mode == FRAME_MODE_MAGNUM or frame_mode == FRAME_MODE_YANSELF:
+        #     date_time = ("%s-%d-%d" % (date_time[0][0:4], int(date_time[1]), int(date_time[2])))
+        # else:
+        date_time = ("'%s %d %d" % (date_time[0][2:4], int(date_time[1]), int(date_time[2])))
     # for NOMO film
     desc = ""
     if "Image ImageDescription" in exif.keys():
