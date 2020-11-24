@@ -14,6 +14,7 @@ PREPROCESS_FLAG = "_2000."
 MY_SPECIAL_TAG = "_lcy"
 ADDITIONAL_OUTPUT_FOLDER = "_frame"
 AUTHOR = ""
+LOCATION_LIST_FILE_NAME = "loc.json"
 
 OPTION_DEBUG = 0
 OPTION_CLEAR_PICTURES = 1
@@ -337,19 +338,28 @@ def get_resize_size(frame_mode, origin_width, origin_height, origin_file):
     resize_width += (resize_width % 2)
     return resize_width, resize_height
 
-def add_frame(input_file, output_path):
+def read_location_file():
+    loc_file_path = PICTURE_FOLDER + "/" + LOCATION_LIST_FILE_NAME
+    is_exist = os.path.exists(loc_file_path)
+    loc_list = json.load(open(loc_file_path, 'r'))
+    print(loc_list)
+    return loc_list
+
+def add_frame(input_file, output_path, loc=None):
     imgexif = open(input_file, 'rb')
     exif = exifread.process_file(imgexif)
 
     # GPS
     location = ""
-    if OPTION_QUERY_ADDRESS == 1:
-        location = query_addr(exif)
-        if len(location) > 0:
-            print(location)
-        else:
-            location = "上海"
-            print("unknown location, set deafult: %s" % location)
+    if loc != None:
+        location = loc
+    else:
+        if OPTION_QUERY_ADDRESS == 1:
+            location = query_addr(exif)
+            if len(location) <= 0:
+                location = "上海"
+                print("unknown location, set deafult: %s" % location)
+    print(location)
 
     # check landscape or portrait
     origin_file = Image.open(input_file).convert("RGBA")
@@ -498,12 +508,17 @@ def process():
         fileNames = glob.glob(full_additional_path + r'/*')
         for fileName in fileNames:
             os.remove(fileName)
+    
+    location_list = read_location_file()
 
     # Resize the Original files.
     idx = 1
     for each_picture in files:
         print("\nNo.%04d" % idx)
-        add_frame(each_picture, full_additional_path)
+        if location_list != None:
+            add_frame(each_picture, full_additional_path, location_list[idx-1])
+        else:
+            add_frame(each_picture, full_additional_path)
         idx += 1
         if OPTION_DEBUG == 1:
             break
@@ -515,11 +530,11 @@ def process():
 if __name__ == '__main__':
     if len(sys.argv) == 1:
         print("arguments error!\r\n-h shows usage.")
-        # PICTURE_FOLDER = "/Users/junlin/myPhoto/new/Photography18/20201004_万科/__process"
+        # PICTURE_FOLDER = "/Users/junlin/test/shot"
         # PREPROCESS_FLAG = ""
-        # OPTION_DEBUG = 1
+        # #OPTION_DEBUG = 1
         # process()
-        sys.exit()
+        # sys.exit()
     for arg in sys.argv[1:]:
         if arg == '-v' or arg == "--version":
             print("1.0.0")
