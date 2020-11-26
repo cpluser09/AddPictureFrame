@@ -341,6 +341,8 @@ def get_resize_size(frame_mode, origin_width, origin_height, origin_file):
 def read_location_file():
     loc_file_path = PICTURE_FOLDER + "/" + LOCATION_LIST_FILE_NAME
     is_exist = os.path.exists(loc_file_path)
+    if is_exist == False:
+        return None
     loc_list = json.load(open(loc_file_path, 'r'))
     print(loc_list)
     return loc_list
