@@ -260,10 +260,10 @@ def get_basic_info(frame_mode, exif):
         shot_time = exif["EXIF DateTimeOriginal"].printable
         date_time = shot_time.split(" ", 1)[0]
         date_time = date_time.split(":")
-        # if frame_mode == FRAME_MODE_MAGNUM or frame_mode == FRAME_MODE_YANSELF:
-        #     date_time = ("%s-%d-%d" % (date_time[0][0:4], int(date_time[1]), int(date_time[2])))
-        # else:
-        date_time = ("'%s %d %d" % (date_time[0][2:4], int(date_time[1]), int(date_time[2])))
+        if frame_mode == FRAME_MODE_MAGNUM or frame_mode == FRAME_MODE_YANSELF:
+            date_time = ("%s.%d.%d" % (date_time[0][0:4], int(date_time[1]), int(date_time[2])))
+        else:
+            date_time = ("%d %d '%s" % (int(date_time[1]), int(date_time[2]), date_time[0][2:4]))
     # for NOMO film
     desc = ""
     if "Image ImageDescription" in exif.keys():
