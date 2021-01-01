@@ -14,7 +14,8 @@ PREPROCESS_FLAG = "_2000."
 MY_SPECIAL_TAG = "_lcy"
 ADDITIONAL_OUTPUT_FOLDER = "_frame"
 AUTHOR = ""
-LOCATION_LIST_FILE_NAME = "loc.json"
+LOCATION_LIST_FILE_NAME = "loc.txt"
+DESCRIPTION_LIST_FILE_NAME = "desc.txt"
 
 OPTION_DEBUG = 0
 OPTION_CLEAR_PICTURES = 1
@@ -34,8 +35,8 @@ FRAME_MODE_YANSELF      = 32
 FRAME_MODE_G4           = 64
 FRAME_MODE_LIST         = {FRAME_MODE_CLASSIC:"CLASSIC", FRAME_MODE_SHOT_PARAM:"PARAM", FRAME_MODE_FILM:"FILM", 
                             FRAME_MODE_INSTAGRAM:"INSTA", FRAME_MODE_MAGNUM:"MAG", FRAME_MODE_YANSELF:"YANSELF", FRAME_MODE_G4:"G4"}
-FRAME_MODE              = FRAME_MODE_G4 + FRAME_MODE_INSTAGRAM + FRAME_MODE_MAGNUM + FRAME_MODE_YANSELF
 FRAME_MODE =  FRAME_MODE_YANSELF + FRAME_MODE_INSTAGRAM + FRAME_MODE_G4
+#FRAME_MODE =  FRAME_MODE_YANSELF
 is_read_mode            = 0
 
 ORIENT_ROTATES = {"Horizontal (normal)":1, "Mirrored horizontal":2, "Rotated 180":3, "Mirrored vertical":4,
@@ -378,17 +379,32 @@ def read_location_file():
     is_exist = os.path.exists(loc_file_path)
     if is_exist == False:
         return None
-    loc_list = json.load(open(loc_file_path, 'r'))
-    print(loc_list)
-    return loc_list
+    locs = list()
+    loc_list = open(loc_file_path, 'r')
+    for line in loc_list.readlines():
+        locs.append(line.strip())
+    print(locs)
+    return locs
 
-def add_frame(input_file, output_path, loc=None):
+def read_description_file():
+    desc_file_path = PICTURE_FOLDER + "/" + DESCRIPTION_LIST_FILE_NAME
+    is_exist = os.path.exists(desc_file_path)
+    if is_exist == False:
+        return None
+    descs = list()
+    desc_list = open(desc_file_path, 'r')
+    for line in desc_list.readlines():
+        descs.append(line.strip())
+    print(descs)
+    return descs
+
+def add_frame(input_file, output_path, loc=None, desc=None):
     imgexif = open(input_file, 'rb')
     exif = exifread.process_file(imgexif)
 
     # GPS
     location = ""
-    if loc != None:
+    if loc != None and len(loc) > 0:
         location = loc
     else:
         if OPTION_QUERY_ADDRESS == 1:
@@ -423,7 +439,7 @@ def add_frame(input_file, output_path, loc=None):
         # remove location info for instagram
         if mode == FRAME_MODE_INSTAGRAM:
             loc = ""
-        date_time, shot_time, desc = get_basic_info(mode, exif)
+        date_time, shot_time, exif_desc = get_basic_info(mode, exif)
         left, top, frame_width, frame_height, bg_color, text_left, text_top = get_frame_rect(mode, resize_width, resize_height)
 
         # create background image
@@ -433,6 +449,7 @@ def add_frame(input_file, output_path, loc=None):
         img_frame.paste(img_resize, (left, top))
 
         # draw text
+        text_top += 2
         text_top_offset = 22
         text_color = (200, 200, 200)
         if mode == FRAME_MODE_MAGNUM or mode == FRAME_MODE_YANSELF:
@@ -442,16 +459,16 @@ def add_frame(input_file, output_path, loc=None):
         font = ImageFont.truetype("FZWBJW.TTF", font_size)
         draw = ImageDraw.Draw(img_frame)
         if resize_width >= resize_height:
-            draw_text = ("%s %s %s" % (date_time, desc, loc))
+            draw_text = ("%s %s %s      %s" % (date_time, exif_desc, loc, desc))
             draw.text((text_left, text_top), draw_text, font=font, fill=text_color)
             if mode == FRAME_MODE_MAGNUM:
                 draw.text((left+resize_width-50, text_top), AUTHOR, font=font, fill=text_color)
         else:
             if mode == FRAME_MODE_YANSELF or mode == FRAME_MODE_G4:
-                draw_text = ("%s %s %s" % (date_time, desc, loc))
+                draw_text = ("%s %s %s      %s" % (date_time, exif_desc, loc, desc))
                 draw.text((text_left, text_top), draw_text, font=font, fill=text_color)
             else:
-                draw_text = ("%s  %s" % (date_time, desc))
+                draw_text = ("%s  %s" % (date_time, exif_desc))
                 draw.text((text_left, text_top), draw_text, font=font, fill=text_color)
                 if loc != "":                   
                     draw.text((text_left, text_top - text_top_offset), loc, font=font, fill=text_color)
@@ -547,18 +564,23 @@ def process():
             os.remove(fileName)
     
     location_list = read_location_file()
+    description_list = read_description_file()
 
     # Resize the Original files.
-    idx = 1
+    idx = 0
     for each_picture in files:
-        print("\nNo.%04d" % idx)
-        if location_list != None:
-            add_frame(each_picture, full_additional_path, location_list[idx-1])
-        else:
-            add_frame(each_picture, full_additional_path)
+        print("\nNo.%04d" % (idx+1))
+
+        loc = ""
+        if location_list != None and idx < len(location_list):
+            loc = location_list[idx]
+
+        desc = ""
+        if description_list != None and idx < len(description_list):
+            desc = description_list[idx]
+        
+        add_frame(each_picture, full_additional_path, loc, desc)
         idx += 1
-        if OPTION_DEBUG == 1:
-            break
 
     # print ("output folder: %s" % full_additional_path)
     print ("\nDONE.")
@@ -567,11 +589,11 @@ def process():
 if __name__ == '__main__':
     if len(sys.argv) == 1:
         print("arguments error!\r\n-h shows usage.")
-        # PICTURE_FOLDER = "/Users/junlin/test/shot"
-        # PREPROCESS_FLAG = ""
-        # #OPTION_DEBUG = 1
-        # process()
-        # sys.exit()
+        PICTURE_FOLDER = "/Users/junlin/myPhoto/yanself/2021Q1/01"
+        PREPROCESS_FLAG = ""
+        #OPTION_DEBUG = 1
+        process()
+        sys.exit()
     for arg in sys.argv[1:]:
         if arg == '-v' or arg == "--version":
             print("1.0.0")
