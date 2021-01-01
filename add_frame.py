@@ -31,10 +31,11 @@ FRAME_MODE_FILM         = 4
 FRAME_MODE_INSTAGRAM    = 8
 FRAME_MODE_MAGNUM       = 16
 FRAME_MODE_YANSELF      = 32
+FRAME_MODE_G4           = 64
 FRAME_MODE_LIST         = {FRAME_MODE_CLASSIC:"CLASSIC", FRAME_MODE_SHOT_PARAM:"PARAM", FRAME_MODE_FILM:"FILM", 
-                            FRAME_MODE_INSTAGRAM:"INSTA", FRAME_MODE_MAGNUM:"MAG", FRAME_MODE_YANSELF:"YANSELF"}
-FRAME_MODE              = FRAME_MODE_CLASSIC + FRAME_MODE_INSTAGRAM + FRAME_MODE_MAGNUM + FRAME_MODE_YANSELF
-FRAME_MODE = FRAME_MODE_MAGNUM + FRAME_MODE_CLASSIC + FRAME_MODE_YANSELF + FRAME_MODE_INSTAGRAM
+                            FRAME_MODE_INSTAGRAM:"INSTA", FRAME_MODE_MAGNUM:"MAG", FRAME_MODE_YANSELF:"YANSELF", FRAME_MODE_G4:"G4"}
+FRAME_MODE              = FRAME_MODE_G4 + FRAME_MODE_INSTAGRAM + FRAME_MODE_MAGNUM + FRAME_MODE_YANSELF
+FRAME_MODE =  FRAME_MODE_YANSELF + FRAME_MODE_INSTAGRAM + FRAME_MODE_G4
 is_read_mode            = 0
 
 ORIENT_ROTATES = {"Horizontal (normal)":1, "Mirrored horizontal":2, "Rotated 180":3, "Mirrored vertical":4,
@@ -189,8 +190,7 @@ def get_frame_rect_yanself(resize_width, resize_height):
     elif resize_width < resize_height:
         left = (int)((frame_width - resize_width) / 2.0)
         top = (int)((frame_height - resize_height) / 2.0)
-
-    # calculate postion of text
+     # calculate postion of text
     text_left = left
     text_top = top + resize_height + 2
     if resize_width < resize_height:
@@ -200,6 +200,40 @@ def get_frame_rect_yanself(resize_width, resize_height):
         text_left = left
         text_top = top + resize_height + 2
     return (left, top, frame_width, frame_height, (255, 255, 255), text_left, text_top)    
+
+def get_frame_rect_g4(resize_width, resize_height):
+    # calculate frame size
+    frame_width = (int)(resize_width * 1.02)
+    frame_width += (frame_width % 2)
+    frame_height = (int)(resize_height * 1.18)
+    if resize_width == resize_height:
+        frame_width = (int)(resize_width * 1.6)
+        frame_width += (frame_width % 2)
+        frame_height = frame_width
+    elif resize_width < resize_height:
+        frame_width = (int)(resize_width * 1.03)
+        frame_width += (frame_width % 2)
+        frame_height = (int)(resize_height * 1.2)
+
+    # calculate picture's left/top
+    left = (int)((frame_width - resize_width) / 2.0)
+    top = (int)((frame_height - resize_height) / 2.0)
+    if resize_width == resize_height:
+        left = (int)((frame_width - resize_width) / 2.0)
+        top = (int)((frame_height - resize_height) / 2.0)
+    elif resize_width < resize_height:
+        left = (int)((frame_width - resize_width) / 2.0)
+        top = (int)((frame_height - resize_height) / 2.0)
+     # calculate postion of text
+    text_left = left
+    text_top = top + resize_height + 2
+    if resize_width < resize_height:
+        text_left = left
+        text_top = top + resize_height + 2
+    elif resize_width == resize_height:
+        text_left = left
+        text_top = top + resize_height + 2
+    return (left, top, frame_width, frame_height, (255, 255, 255), text_left, text_top) 
 
 def get_frame_rect_classic(resize_width, resize_height):
     # calculate frame size
@@ -233,7 +267,6 @@ def get_frame_rect_classic(resize_width, resize_height):
     if resize_width < resize_height:
         text_left = left + resize_width + 8
         text_top = top + resize_height - 16
-      
     return (left, top, frame_width, frame_height, (255, 255, 255), text_left, text_top)    
 
 def get_frame_rect(frame_mode, resize_width, resize_height):
@@ -245,6 +278,8 @@ def get_frame_rect(frame_mode, resize_width, resize_height):
         return get_frame_rect_magnum(resize_width, resize_height)    
     if frame_mode == FRAME_MODE_YANSELF:
         return get_frame_rect_yanself(resize_width, resize_height)    
+    if frame_mode == FRAME_MODE_G4:
+        return get_frame_rect_g4(resize_width, resize_height)    
     return get_frame_rect_classic(resize_width, resize_height)
 
 def get_basic_info(frame_mode, exif):
@@ -332,7 +367,7 @@ def get_resize_size(frame_mode, origin_width, origin_height, origin_file):
         resize_width = RESIZE_WIDTH_SQUARE
     wpercent = (resize_width/float(origin_file.size[0]))
     resize_height = int((float(origin_file.size[1])*float(wpercent)))
-    if frame_mode == FRAME_MODE_MAGNUM or frame_mode == FRAME_MODE_YANSELF:
+    if frame_mode == FRAME_MODE_MAGNUM or frame_mode == FRAME_MODE_YANSELF or frame_mode == FRAME_MODE_INSTAGRAM:
         resize_width = (int)(resize_width * 4 / 2)
         resize_height = (int)(resize_height * 4 / 2)
     resize_width += (resize_width % 2)
@@ -412,7 +447,7 @@ def add_frame(input_file, output_path, loc=None):
             if mode == FRAME_MODE_MAGNUM:
                 draw.text((left+resize_width-50, text_top), AUTHOR, font=font, fill=text_color)
         else:
-            if mode == FRAME_MODE_YANSELF:
+            if mode == FRAME_MODE_YANSELF or mode == FRAME_MODE_G4:
                 draw_text = ("%s %s %s" % (date_time, desc, loc))
                 draw.text((text_left, text_top), draw_text, font=font, fill=text_color)
             else:
