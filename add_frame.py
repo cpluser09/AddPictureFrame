@@ -50,7 +50,11 @@ def query_addr(exif):
     lon = exif["GPS GPSLongitude"].printable[1:-1].replace(" ", "").replace("/", ",").split(",")
     if len(lon) < 4:
         return ""
-    lon = float(lon[0]) + float(lon[1]) / 60 + float(lon[2]) / float(lon[3]) / 3600
+    print(lon)
+    if float(lon[3]) > 0.0:
+        lon = float(lon[0]) + float(lon[1]) / 60 + float(lon[2]) / float(lon[3]) / 3600
+    else:
+        lon = float(lon[0]) + float(lon[1]) / 60
     if lon_ref != "E":
         lon = lon * (-1)
     # 纬度
@@ -58,7 +62,10 @@ def query_addr(exif):
     lat = exif["GPS GPSLatitude"].printable[1:-1].replace(" ", "").replace("/", ",").split(",")
     if len(lat) < 4:
         return ""
-    lat = float(lat[0]) + float(lat[1]) / 60 + float(lat[2]) / float(lat[3]) / 3600
+    if float(lat[3]) > 0.0:
+        lat = float(lat[0]) + float(lat[1]) / 60 + float(lat[2]) / float(lat[3]) / 3600
+    else:
+        lat = float(lat[0]) + float(lat[1]) / 60
     if lat_ref != "N":
         lat = lat * (-1)
     #print('照片的经纬度：', (lat, lon))
@@ -370,8 +377,8 @@ def get_resize_size(frame_mode, origin_width, origin_height, origin_file):
     wpercent = (resize_width/float(origin_file.size[0]))
     resize_height = int((float(origin_file.size[1])*float(wpercent)))
     if frame_mode == FRAME_MODE_MAGNUM or frame_mode == FRAME_MODE_YANSELF or frame_mode == FRAME_MODE_INSTAGRAM:
-        resize_width = (int)(resize_width * 4 / 2)
-        resize_height = (int)(resize_height * 4 / 2)
+        resize_width = (int)(resize_width * 7 / 5)
+        resize_height = (int)(resize_height * 7 / 5)
     resize_width += (resize_width % 2)
     return resize_width, resize_height
 
@@ -460,13 +467,13 @@ def add_frame(input_file, output_path, loc=None, desc=None):
         font = ImageFont.truetype("FZWBJW.TTF", font_size)
         draw = ImageDraw.Draw(img_frame)
         if resize_width >= resize_height:
-            draw_text = ("%s %s %s      %s" % (date_time, exif_desc, loc, desc))
+            draw_text = ("%s %s %s  %s" % (date_time, exif_desc, loc, desc))
             draw.text((text_left, text_top), draw_text, font=font, fill=text_color)
             if mode == FRAME_MODE_MAGNUM:
                 draw.text((left+resize_width-50, text_top), AUTHOR, font=font, fill=text_color)
         else:
             if mode == FRAME_MODE_YANSELF or mode == FRAME_MODE_G4:
-                draw_text = ("%s %s %s      %s" % (date_time, exif_desc, loc, desc))
+                draw_text = ("%s %s %s  %s" % (date_time, exif_desc, loc, desc))
                 draw.text((text_left, text_top), draw_text, font=font, fill=text_color)
             else:
                 draw_text = ("%s  %s" % (date_time, exif_desc))
