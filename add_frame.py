@@ -436,10 +436,10 @@ def add_frame(input_file, output_path, loc=None, desc=None):
         font_size = TEXT_FONT_SIZE
         if is_landscape == True:
             if resize_width > 1200:
-                font_size = 23
+                font_size = 30
         else:
             if resize_height > 800:
-                font_size = 23  
+                font_size = 30  
         # resize picture
         img_resize = origin_file.resize((resize_width, resize_height), Image.ANTIALIAS)
 
@@ -461,7 +461,7 @@ def add_frame(input_file, output_path, loc=None, desc=None):
         text_top_offset = 22
         text_color = (200, 200, 200)
         if mode == FRAME_MODE_MAGNUM or mode == FRAME_MODE_YANSELF:
-            text_color = (150, 150, 150)
+            text_color = (88, 88, 88)
             text_top_offset = 32
             
         font = ImageFont.truetype("FZWBJW.TTF", font_size)
