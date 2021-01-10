@@ -35,7 +35,7 @@ FRAME_MODE_YANSELF      = 32
 FRAME_MODE_G4           = 64
 FRAME_MODE_LIST         = {FRAME_MODE_CLASSIC:"CLASSIC", FRAME_MODE_SHOT_PARAM:"PARAM", FRAME_MODE_FILM:"FILM", 
                             FRAME_MODE_INSTAGRAM:"INSTA", FRAME_MODE_MAGNUM:"MAG", FRAME_MODE_YANSELF:"YANSELF", FRAME_MODE_G4:"G4"}
-FRAME_MODE =  FRAME_MODE_YANSELF + FRAME_MODE_INSTAGRAM + FRAME_MODE_G4
+FRAME_MODE =  FRAME_MODE_YANSELF + FRAME_MODE_INSTAGRAM
 #FRAME_MODE =  FRAME_MODE_YANSELF
 is_read_mode            = 0
 
@@ -467,14 +467,19 @@ def add_frame(input_file, output_path, loc=None, desc=None):
         font = ImageFont.truetype("FZWBJW.TTF", font_size)
         draw = ImageDraw.Draw(img_frame)
         if resize_width >= resize_height:
-            draw_text = ("%s %s %s  %s" % (date_time, exif_desc, loc, desc))
-            draw.text((text_left, text_top), draw_text, font=font, fill=text_color)
-            if mode == FRAME_MODE_MAGNUM:
-                draw.text((left+resize_width-50, text_top), AUTHOR, font=font, fill=text_color)
+            if mode == FRAME_MODE_INSTAGRAM:
+                draw_text = ""
+            else:
+                draw_text = ("%s %s %s  %s" % (date_time, exif_desc, loc, desc))
+                draw.text((text_left, text_top), draw_text, font=font, fill=text_color)
+                if mode == FRAME_MODE_MAGNUM:
+                    draw.text((left+resize_width-50, text_top), AUTHOR, font=font, fill=text_color)
         else:
             if mode == FRAME_MODE_YANSELF or mode == FRAME_MODE_G4:
                 draw_text = ("%s %s %s  %s" % (date_time, exif_desc, loc, desc))
                 draw.text((text_left, text_top), draw_text, font=font, fill=text_color)
+            elif mode == FRAME_MODE_INSTAGRAM:
+                draw_text = ""
             else:
                 draw_text = ("%s  %s" % (date_time, exif_desc))
                 draw.text((text_left, text_top), draw_text, font=font, fill=text_color)
