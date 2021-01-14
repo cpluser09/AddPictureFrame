@@ -554,6 +554,66 @@ def dump_picture_infos(infos, full_additional_path):
     file_handle.close()
     print("dump successfully!", file_name)
 
+def resize_photo(file_path, max_width):
+    imgexif = open(file_path, 'rb')
+    exif = exifread.process_file(imgexif)
+    origin_file = Image.open(file_path).convert("RGBA")
+    origin_file = check_orientation(origin_file, exif)
+    origin_width, origin_height = origin_file.size
+    is_landscape = (origin_width > origin_height)
+
+    resize_width = 0
+    resize_height = 0
+    if is_landscape is True:
+        resize_width = max_width
+        resize_height = int(resize_width * origin_height / origin_width)
+    else:
+        resize_height = max_width
+        resize_width = int(resize_height * origin_width / origin_height)
+
+    img = origin_file.resize((resize_width, resize_height), Image.ANTIALIAS)
+    return img, exif
+
+
+def search_files2(dirname):
+    filter = [".jpg", ".JPG", ".jpeg", ".JPEG"]
+    result = []
+    for filename in os.listdir(dirname):
+        apath = os.path.join(dirname, filename)
+        ext = os.path.splitext(apath)[1]
+        if ext in filter:
+            result.append(apath)
+    result = sorted(result)
+    return result
+
+def prepare_print(path):
+    resize_width = 2000
+    file_list = search_files2(path)
+    for curr_path in file_list:
+        handle, exif = resize_photo(curr_path, resize_width)
+
+        desc = ""
+        (path, filename) = os.path.split(curr_path)
+        if "EXIF FNumber" in exif.keys():
+            desc = desc + " F" + exif["EXIF FNumber"].printable
+        if "EXIF ExposureTime" in exif.keys():
+            desc = desc + " " + exif["EXIF ExposureTime"].printable
+        if "EXIF ISOSpeedRatings" in exif.keys():
+            desc = desc + " ISO" + exif["EXIF ISOSpeedRatings"].printable
+        draw_text = ("%s %s" % (filename, desc))
+
+        font = ImageFont.truetype("FZWBJW.TTF", 30)
+        draw = ImageDraw.Draw(handle)
+        draw.text((0, 0), draw_text, font=font, fill=(100, 100 , 100))
+
+        output_folder = path + "/_print"
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+        output_full_path = ("%s/%d_%s" % (output_folder, resize_width, filename))
+        # write file
+        handle = handle.convert("RGB")
+        handle.save(output_full_path, quality=100)
+        print(output_full_path)
 
 def usage():
 	print ("""
