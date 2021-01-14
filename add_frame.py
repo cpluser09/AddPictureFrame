@@ -604,12 +604,13 @@ def prepare_print(path):
 
         font = ImageFont.truetype("FZWBJW.TTF", 30)
         draw = ImageDraw.Draw(handle)
-        draw.text((0, 0), draw_text, font=font, fill=(100, 100 , 100))
+        draw.text((0, 0), draw_text, font=font, fill=(180, 180 , 180))
 
         output_folder = path + "/_print"
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
-        output_full_path = ("%s/%d_%s" % (output_folder, resize_width, filename))
+        output_name, output_ext_name = os.path.splitext(filename)
+        output_full_path = ("%s/%s_%d%s" % (output_folder, output_name, resize_width, output_ext_name))
         # write file
         handle = handle.convert("RGB")
         handle.save(output_full_path, quality=100)
