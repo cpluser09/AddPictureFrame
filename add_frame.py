@@ -33,9 +33,10 @@ FRAME_MODE_INSTAGRAM    = 8
 FRAME_MODE_MAGNUM       = 16
 FRAME_MODE_YANSELF      = 32
 FRAME_MODE_G4           = 64
+FRAME_MODE_NONE         = 128
 FRAME_MODE_LIST         = {FRAME_MODE_CLASSIC:"CLASSIC", FRAME_MODE_SHOT_PARAM:"PARAM", FRAME_MODE_FILM:"FILM", 
-                            FRAME_MODE_INSTAGRAM:"INSTA", FRAME_MODE_MAGNUM:"MAG", FRAME_MODE_YANSELF:"YANSELF", FRAME_MODE_G4:"G4"}
-FRAME_MODE =  FRAME_MODE_YANSELF + FRAME_MODE_INSTAGRAM
+                            FRAME_MODE_INSTAGRAM:"INSTA", FRAME_MODE_MAGNUM:"MAG", FRAME_MODE_YANSELF:"YANSELF", FRAME_MODE_G4:"G4", FRAME_MODE_NONE:"NONE"}
+FRAME_MODE =  FRAME_MODE_NONE + FRAME_MODE_INSTAGRAM
 #FRAME_MODE =  FRAME_MODE_YANSELF
 is_read_mode            = 0
 
@@ -275,7 +276,10 @@ def get_frame_rect_classic(resize_width, resize_height):
     if resize_width < resize_height:
         text_left = left + resize_width + 8
         text_top = top + resize_height - 16
-    return (left, top, frame_width, frame_height, (255, 255, 255), text_left, text_top)    
+    return (left, top, frame_width, frame_height, (255, 255, 255), text_left, text_top)
+
+def get_frame_rect_none(resize_width, resize_height):
+    return (0, 0, resize_width, resize_height, (255, 255, 255), 0, 0)
 
 def get_frame_rect(frame_mode, resize_width, resize_height):
     if frame_mode == FRAME_MODE_CLASSIC:
@@ -288,6 +292,8 @@ def get_frame_rect(frame_mode, resize_width, resize_height):
         return get_frame_rect_yanself(resize_width, resize_height)    
     if frame_mode == FRAME_MODE_G4:
         return get_frame_rect_g4(resize_width, resize_height)    
+    if frame_mode == FRAME_MODE_NONE:
+        return get_frame_rect_none(resize_width, resize_height)    
     return get_frame_rect_classic(resize_width, resize_height)
 
 def get_basic_info(frame_mode, exif):
@@ -379,6 +385,9 @@ def get_resize_size(frame_mode, origin_width, origin_height, origin_file):
     if frame_mode == FRAME_MODE_MAGNUM or frame_mode == FRAME_MODE_YANSELF or frame_mode == FRAME_MODE_INSTAGRAM:
         resize_width = (int)(resize_width * 7 / 5)
         resize_height = (int)(resize_height * 7 / 5)
+    elif frame_mode == FRAME_MODE_NONE:
+        resize_width *= 2
+        resize_height *= 2 
     resize_width += (resize_width % 2)
     return resize_width, resize_height
 
@@ -467,7 +476,7 @@ def add_frame(input_file, output_path, loc=None, desc=None):
         font = ImageFont.truetype("FZWBJW.TTF", font_size)
         draw = ImageDraw.Draw(img_frame)
         if resize_width >= resize_height:
-            if mode == FRAME_MODE_INSTAGRAM:
+            if mode == FRAME_MODE_INSTAGRAM or mode == FRAME_MODE_NONE:
                 draw_text = ""
             else:
                 draw_text = ("%s %s %s  %s" % (date_time, exif_desc, loc, desc))
@@ -478,7 +487,7 @@ def add_frame(input_file, output_path, loc=None, desc=None):
             if mode == FRAME_MODE_YANSELF or mode == FRAME_MODE_G4:
                 draw_text = ("%s %s %s  %s" % (date_time, exif_desc, loc, desc))
                 draw.text((text_left, text_top), draw_text, font=font, fill=text_color)
-            elif mode == FRAME_MODE_INSTAGRAM:
+            elif mode == FRAME_MODE_INSTAGRAM or mode == FRAME_MODE_NONE:
                 draw_text = ""
             else:
                 draw_text = ("%s  %s" % (date_time, exif_desc))
